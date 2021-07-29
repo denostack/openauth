@@ -12,7 +12,7 @@
   ],
   "author": "Changwan Jun <wan2land@gmail.com>",
   "license": "MIT",
-  "repository": "https://github.com/wan2land/openauth/tree/master/packages/instagram",
+  "repository": "https://github.com/wan2land/openauth/tree/main/packages/instagram",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "scripts": {

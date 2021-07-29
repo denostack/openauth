@@ -12,7 +12,7 @@
   ],
   "author": "Changwan Jun <wan2land@gmail.com>",
   "license": "MIT",
-  "repository": "https://github.com/wan2land/openauth/tree/master/packages/google",
+  "repository": "https://github.com/wan2land/openauth/tree/main/packages/google",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "scripts": {
