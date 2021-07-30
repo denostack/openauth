@@ -11,8 +11,8 @@
     "deploy": "npm run build && npm run test && lerna publish from-package"
   },
   "devDependencies": {
-    "@commitlint/cli": "^13.1.0",
-    "@commitlint/config-conventional": "^13.1.0",
+    "@commitlint/cli": "13.1.0",
+    "@commitlint/config-conventional": "13.1.0",
     "@types/jest": "26.0.24",
     "@types/node": "14.17.6",
     "env-cmd": "10.1.0",
