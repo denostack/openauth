@@ -1,3 +1,3 @@
 
 export { GithubClient } from './github-client'
-export { GithubOAuth } from './github-oauth'
+export { GithubOAuth, GithubOauthOptions } from './github-oauth'

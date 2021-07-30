@@ -5,6 +5,9 @@ describe('testsuite of helpers', () => {
     expect(join('https://wani.kr/oauth', '').toString()).toEqual('https://wani.kr/oauth')
     expect(join('https://wani.kr/oauth?response_type=code', '').toString()).toEqual('https://wani.kr/oauth?response_type=code')
 
+    expect(join('https://api.github.com', 'user').toString())
+      .toEqual('https://api.github.com/user')
+
     expect(join('https://wani.kr/oauth', '.').toString()).toEqual('https://wani.kr/oauth')
     expect(join('https://wani.kr/oauth?response_type=code', '.').toString()).toEqual('https://wani.kr/oauth?response_type=code')
 
@@ -22,6 +25,5 @@ describe('testsuite of helpers', () => {
 
     expect(join('https://wani.kr/oauth?response_type=code', { path: 'me', query: { client_id: 'CLIENT_ID', response_type: null, ignore_null: null, ignore_undef: undefined } }).toString())
       .toEqual('https://wani.kr/oauth/me?client_id=CLIENT_ID')
-
   })
 })

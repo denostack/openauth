@@ -33,6 +33,8 @@ describe('@openauth/facebook FacebookOAuth', () => {
   it('test getAccessTokenResponse success', async () => {
     const mockFetch = jest.fn()
     mockFetch.mockImplementation(() => Promise.resolve({
+      status: 200,
+      headers: {},
       json: () => Promise.resolve({
         access_token: 'ACCESSTOKEN_1234567890',
         token_type: 'bearer',
@@ -71,6 +73,8 @@ describe('@openauth/facebook FacebookOAuth', () => {
   it('test getAuthUser', async () => {
     const mockFetch = jest.fn()
     mockFetch.mockImplementation(() => Promise.resolve({
+      status: 200,
+      headers: {},
       json: () => Promise.resolve({
         id: '123456789',
         name: 'Cris Jun',

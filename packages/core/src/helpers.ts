@@ -3,7 +3,7 @@ import { HttpPath } from './interfaces/oauth'
 
 export function join(base: string, path: string | HttpPath): URL {
   const baseUrl = new URL(base)
-  baseUrl.pathname = `${baseUrl.pathname}/`
+  baseUrl.pathname = `${baseUrl.pathname.replace(/\/+$/, '')}/`
 
   let _path = typeof path === 'string' ? path : path.path
   _path = _path === '.' ? '' : _path

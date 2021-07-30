@@ -1,9 +1,14 @@
-import { AccessTokenRespnoseOptions, AccessTokenResponse, AuthUser, Client, OAuth, OAuth2 } from '@openauth/core'
-import { parse, stringify } from 'querystring'
+import { AccessTokenRespnoseOptions, AccessTokenResponse, AuthUser, Client, OAuth2, OAuth2Options } from '@openauth/core'
 
 import { GithubClient } from './github-client'
 
-export class GithubOAuth extends OAuth2 implements OAuth {
+export type GithubOauthOptions = OAuth2Options
+
+export class GithubOAuth extends OAuth2<GithubClient> {
+
+  apiBaseUri(): string {
+    return 'https://api.github.com'
+  }
 
   authRequestUri(): string {
     return 'https://github.com/login/oauth/authorize'
@@ -18,12 +23,11 @@ export class GithubOAuth extends OAuth2 implements OAuth {
   }
 
   createClient(accessToken?: string): Client {
-    return new GithubClient(this._axiosClient, accessToken)
-  }
-
-  async requestAccessToken(code: string, options: AccessTokenRespnoseOptions = {}): Promise<Record<string, any>> {
-    const { data } = await this._axiosClient.post(this.accessTokenRequestUri(), stringify(this.getAccessTokenFields(code, options)))
-    return parse(data)
+    return new GithubClient({
+      baseUri: this.apiBaseUri(),
+      fetch: this._fetch,
+      accessToken,
+    })
   }
 
   getAccessTokenFields(code: string, options: AccessTokenRespnoseOptions = {}): Record<string, any> {

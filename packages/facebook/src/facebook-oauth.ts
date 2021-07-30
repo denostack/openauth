@@ -10,7 +10,7 @@ export interface FacebookOAuthOptions extends OAuth2Options {
   scope: string | string[]
 }
 
-export class FacebookOAuth extends OAuth2 {
+export class FacebookOAuth extends OAuth2<FacebookClient> {
 
   version: string
 

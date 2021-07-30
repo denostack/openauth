@@ -1,30 +1,18 @@
-import { BaseClient, ClientPath } from '@openauth/core'
+import { Client, HttpPath } from '@openauth/core'
 
-export class GithubClient extends BaseClient {
+export class GithubClient extends Client {
 
-  request<TData = any>(method: string, path: ClientPath, params: Record<string, any> = {}, headers: Record<string, any> = {}): Promise<{ headers: any, data: TData }> {
-    const url = `https://api.github.com/${(typeof path === 'object' ? path.path : path).replace(/^\/+/, '')}`
-    const query = typeof path === 'object' ? path.query : {}
-    if (method.toLocaleLowerCase() === 'get') {
-      return this._axios.get(url, {
-        params: query,
-        headers: {
-          Accept: 'application/json',
-          ...this.accessToken ? { Authorization: `Bearer ${this.accessToken}` } : {},
-          ...headers,
-        },
-      })
-    }
-    return this._axios.request({
-      method: method as any,
-      url,
-      params: query,
-      headers: {
-        Accept: 'application/json',
-        ...this.accessToken ? { Authorization: `Bearer ${this.accessToken}` } : {},
-        ...headers,
-      },
-      data: params,
+  request<TData = any>(method: string, path: string | HttpPath, params: Record<string, any> = {}, headers: Record<string, any> = {}): Promise<{ status: number, headers: any, data: TData }> {
+    return super.request(method, path, params, headers).then(response => {
+      if (response.status >= 400) {
+        const { message, ...errorProps } = response.data
+        throw Object.assign(new Error(message || 'Error occured'), errorProps)
+      }
+      if (response.data.error) {
+        const { error_description: message, ...errorProps } = response.data
+        throw Object.assign(new Error(message || 'Error occured'), errorProps)
+      }
+      return response
     })
   }
 }
