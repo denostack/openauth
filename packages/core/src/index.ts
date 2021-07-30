@@ -1,11 +1,10 @@
 
 export * from './interfaces/oauth'
-export { AxiosInstance } from 'axios'
 
 export { OAuthError } from './errors/oauth-error'
 
-export { assignQuery } from './helpers'
+export { join as urlJoin } from './helpers'
 
-export { BaseClient } from './base-client'
+export { Client, ClientOptions } from './client'
 
-export { OAuth2 } from './oauth2'
+export { OAuth2, OAuth2Options } from './oauth2'

@@ -1,20 +1,27 @@
-import { parse, stringify } from 'querystring'
+import { HttpPath } from './interfaces/oauth'
 
 
-export function assignQuery(baseUri: string, query: Record<string, any> = {}) {
-  const [url, baseQuery] = baseUri.split('?', 2)
-  const mergedQuery = Object.entries({
-    ...baseQuery ? parse(baseQuery) as Record<string, any> : {},
-    ...query,
-  }).reduce<Record<string, any>>((carry, [key, value]) => {
+export function join(base: string, path: string | HttpPath): URL {
+  const baseUrl = new URL(base)
+  baseUrl.pathname = `${baseUrl.pathname}/`
+
+  let _path = typeof path === 'string' ? path : path.path
+  _path = _path === '.' ? '' : _path
+
+  const _query = typeof path === 'string' ? [] : Object.entries(path.query)
+
+  const url = new URL(_path, baseUrl)
+  for (const [key, value] of _query) {
     if (value === null || typeof value === 'undefined') {
-      return carry
+      url.searchParams.delete(key)
+    } else if (Array.isArray(value)) {
+      for (const item of value) {
+        url.searchParams.append(key, item)
+      }
+    } else {
+      url.searchParams.set(key, value)
     }
-    carry[key] = value
-    return carry
-  }, {})
-  if (Object.keys(mergedQuery).length === 0) {
-    return url
   }
-  return `${url}?${stringify(mergedQuery)}`
+  url.pathname = url.pathname.replace(/\/+$/, '')
+  return url
 }

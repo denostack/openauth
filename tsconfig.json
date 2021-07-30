@@ -4,8 +4,7 @@
     "module": "commonjs",
     "moduleResolution": "node",
     "lib": [
-      "es2017",
-      "esnext.asynciterable"
+      "ESNext"
     ],
     "declaration": true,
     "pretty": true,

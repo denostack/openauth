@@ -1,25 +1,43 @@
-import axios, { AxiosInstance } from 'axios'
+import fetch from 'cross-fetch'
 
-import { BaseClient } from './base-client'
-import { assignQuery } from './helpers'
+import { Client } from './client'
+import { join } from './helpers'
 import {
   AccessTokenRespnoseOptions,
   AccessTokenResponse,
   AuthRequestUriOptions,
   AuthUser,
-  Client,
-  OAuth,
-  OAuthOptions,
 } from './interfaces/oauth'
 
-export class OAuth2<TClient extends Client = Client> implements OAuth<TClient> {
 
-  _axiosClient: AxiosInstance = axios
+export interface OAuth2Options {
+  clientId: string
+  clientSecret?: string
+  redirectUri: string
+  code?: string
+  scope?: string[] | string
+  fetch?: (input: Request | string, init?: RequestInit) => Promise<Response>
+}
+
+export class OAuth2<TClient extends Client = Client> {
+
+  _fetch: (input: Request | string, init?: RequestInit) => Promise<Response>
   _unauthClient?: TClient
 
-  constructor(public options: OAuthOptions) {
+  constructor(public options: OAuth2Options) {
+    this._fetch = options.fetch ?? fetch
   }
 
+  /**
+   * start with https:// or http://
+   */
+  apiBaseUri(): string {
+    throw new TypeError('It must be implemented.')
+  }
+
+  /**
+   * start with https:// or http://
+   */
   authRequestUri(): string {
     throw new TypeError('It must be implemented.')
   }
@@ -47,11 +65,11 @@ export class OAuth2<TClient extends Client = Client> implements OAuth<TClient> {
    * @see https://tools.ietf.org/html/rfc6749#section-2.3.1
    * @see https://tools.ietf.org/html/rfc6749#section-4.1.3
    */
-  async requestAccessToken(code: string, options: AccessTokenRespnoseOptions = {}): Promise<Record<string, any>> {
-    const { data } = await this._axiosClient.get(
-      assignQuery(this.accessTokenRequestUri(), this.getAccessTokenFields(code, options))
-    )
-    return data
+  requestAccessToken(code: string, options: AccessTokenRespnoseOptions = {}): Promise<Record<string, any>> {
+    return this.getClient().get({
+      path: this.accessTokenRequestUri(),
+      query: this.getAccessTokenFields(code, options),
+    }).then(({ data }) => data)
   }
 
   getAccessTokenFields(code: string, options: AccessTokenRespnoseOptions = {}): Record<string, any> {
@@ -78,14 +96,19 @@ export class OAuth2<TClient extends Client = Client> implements OAuth<TClient> {
   }
 
   createClient(accessToken?: string): TClient {
-    return (new BaseClient(this._axiosClient, accessToken)) as any as TClient
+    return new Client({
+      baseUri: this.apiBaseUri(),
+      fetch: this._fetch,
+      accessToken,
+    }) as TClient
   }
 
   /**
    * @see https://tools.ietf.org/html/rfc6749#section-4.1.1
    */
   getAuthRequestUri(options: AuthRequestUriOptions = {}): Promise<string> {
-    return Promise.resolve(assignQuery(this.authRequestUri(), this.getAuthRequestFiels(options)))
+    const url = join(this.authRequestUri(), { path: '', query: this.getAuthRequestFiels(options) })
+    return Promise.resolve(url.toString())
   }
 
   async getAccessTokenResponse(code: string, options: AccessTokenRespnoseOptions = {}): Promise<AccessTokenResponse> {

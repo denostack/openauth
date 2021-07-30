@@ -1,8 +1,8 @@
-import { Client, OAuth, OAuth2, AuthUser } from '@openauth/core'
+import { Client, OAuth2, AuthUser, OAuth2Options } from '@openauth/core'
 
 import { FacebookClient } from './facebook-client'
 
-export interface FacebookOAuthOptions {
+export interface FacebookOAuthOptions extends OAuth2Options {
   version?: string
   clientId: string
   redirectUri: string
@@ -10,13 +10,17 @@ export interface FacebookOAuthOptions {
   scope: string | string[]
 }
 
-export class FacebookOAuth extends OAuth2 implements OAuth {
+export class FacebookOAuth extends OAuth2 {
 
   version: string
 
   constructor(options: FacebookOAuthOptions) {
     super(options)
-    this.version = options.version ?? 'v7.0'
+    this.version = options.version ?? 'v11.0'
+  }
+
+  apiBaseUri(): string {
+    return `https://graph.facebook.com/${this.version}`
   }
 
   authRequestUri(): string {
@@ -24,11 +28,15 @@ export class FacebookOAuth extends OAuth2 implements OAuth {
   }
 
   accessTokenRequestUri(): string {
-    return `https://graph.facebook.com/${this.version}/oauth/access_token`
+    return 'oauth/access_token'
   }
 
   createClient(accessToken?: string): Client {
-    return new FacebookClient(this._axiosClient, this.version, accessToken)
+    return new FacebookClient({
+      baseUri: this.apiBaseUri(),
+      fetch: this._fetch,
+      accessToken,
+    })
   }
 
   async getAuthUser(accessToken: string): Promise<AuthUser> {
