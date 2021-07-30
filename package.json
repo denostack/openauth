@@ -11,11 +11,14 @@
     "deploy": "npm run build && npm run test && lerna publish from-package"
   },
   "devDependencies": {
+    "@commitlint/cli": "^13.1.0",
+    "@commitlint/config-conventional": "^13.1.0",
     "@types/jest": "26.0.24",
     "@types/node": "14.17.6",
     "env-cmd": "10.1.0",
     "eslint": "7.31.0",
     "eslint-config-stable": "0.9.0",
+    "husky": "^7.0.1",
     "jest": "27.0.6",
     "lerna": "4.0.0",
     "lerna-update-wizard": "0.17.8",
