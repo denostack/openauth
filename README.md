@@ -18,33 +18,13 @@ Open Auth is a pure OAuth 2.0 implementation that does not depend on a specific 
 
 - [core](./packages/core)
 
-
 ### Services
 
-- [facebook](./packages/facebook) - Facebook Login Implementations.
-- [github](./packages/github) - Github Login Implementations.
-- [google](./packages/google) - Google Login Implementations.
-- [instagram](./packages/instagram) - Instagram Login Implementations.
-- [youtube](./packages/youtube) - Youtube Login Implementations. (by `@openauth/google`)
-- [kakao](./packages/kakao) - Kakao Login Implementations.
-- [naver](./packages/naver) - Naver Login Implementations.
-
-### TODO
-
-- [x] Facebook
-- [ ] Twitter
-- [ ] Apple
-- [x] Instagram
-- [x] Google
-- [x] Github
-- [x] Youtube
-- [x] Kakao
-- [x] Naver
-- [ ] Line
-- [ ] Gitlab
-- [ ] Bitbucket
-- [ ] Linked In
-- [ ] Slack
-- [ ] Twitch
-- [ ] Discord
-- [ ] Steam
+- Apple (TODO)
+- [Facebook](./packages/facebook) - Facebook Login Implementations.
+- [Github](./packages/github) - Github Login Implementations.
+- [Google](./packages/google) - Google Login Implementations.
+- [Instagram](./packages/instagram) - Instagram Login Implementations.
+- [Kakao](./packages/kakao) - Kakao Login Implementations.
+- [Naver](./packages/naver) - Naver Login Implementations.
+- Twitter (TODO)
