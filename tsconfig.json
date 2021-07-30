@@ -7,14 +7,12 @@
       "es2017",
       "esnext.asynciterable"
     ],
-    "emitDeclarationOnly": true,
     "declaration": true,
     "pretty": true,
     "sourceMap": true,
     "strict": true,
     "esModuleInterop": true,
-    "noImplicitReturns": true,
-    "experimentalDecorators": true
+    "noImplicitReturns": true
   },
   "files": [
     "./types/jest.d.ts"
