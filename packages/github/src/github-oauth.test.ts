@@ -1,9 +1,8 @@
-
 import { GithubOAuth } from './github-oauth'
 
 const CLIENT_ID = process.env.GITHUB_CLIENT_ID ?? '1234567890'
 const CLIENT_SECRET = process.env.GITHUB_CLIENT_SECRET ?? '1234567890abcdefghijklmnopqrstuvwxyz'
-const REDIRECT_URI = process.env.GITHUB_REDIRECT_URI ?? 'https://wani.kr/auth/github/callback'
+const REDIRECT_URI = process.env.GITHUB_REDIRECT_URI ?? 'https://openauth.wani.kr/github/callback'
 const SCOPE = ['read:user', 'user:email', 'user:follow']
 
 describe('@openauth/github GithubOAuth', () => {

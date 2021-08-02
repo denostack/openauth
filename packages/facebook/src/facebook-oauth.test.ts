@@ -1,9 +1,8 @@
 import { FacebookOAuth } from './facebook-oauth'
 
-
 const CLIENT_ID = process.env.FACEBOOK_CLIENT_ID ?? '1234567890'
 const CLIENT_SECRET = process.env.FACEBOOK_CLIENT_SECRET ?? '1234567890abcdefghijklmnopqrstuvwxyz'
-const REDIRECT_URI = process.env.FACEBOOK_REDIRECT_URI ?? 'https://wani.kr/auth/facebook/callback'
+const REDIRECT_URI = process.env.FACEBOOK_REDIRECT_URI ?? 'https://openauth.wani.kr/facebook/callback'
 const SCOPE = ['pages_show_list', 'public_profile']
 
 describe('@openauth/facebook FacebookOAuth', () => {
