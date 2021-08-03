@@ -1,36 +1,24 @@
-import { BaseClient, ClientPath } from '@openauth/core'
-import { stringify } from 'querystring'
+import { Client, HttpPath } from '@openauth/core'
 
 import { GetUserMeResponse } from './interfaces'
 
 
-export class KakaoClient extends BaseClient {
+export class KakaoClient extends Client {
+
+  request<TData = any>(method: string, path: string | HttpPath, params: Record<string, any> = {}, headers: Record<string, any> = {}): Promise<{ status: number, headers: any, data: TData }> {
+    return super.request(method, path, params, headers).then((response) => {
+      if (response.status >= 400) {
+        const { error_description: description, error_code: code, ...errorProps } = response.data
+        throw Object.assign(new Error(description || 'Error occured'), {
+          code,
+          ...errorProps,
+        })
+      }
+      return response
+    })
+  }
 
   getUserMe() {
     return this.get<GetUserMeResponse>('user/me')
-  }
-
-  request<TData = any>(method: string, path: ClientPath, params: Record<string, any> = {}, headers: Record<string, any> = {}): Promise<{ headers: any, data: TData }> {
-    const url = `https://kapi.kakao.com/v2/${(typeof path === 'object' ? path.path : path).replace(/^\/+/, '')}`
-    const query = typeof path === 'object' ? path.query : {}
-    if (method.toLocaleLowerCase() === 'get') {
-      return this._axios.get(url, {
-        params: query,
-        headers: {
-          ...this.accessToken ? { Authorization: `Bearer ${this.accessToken}` } : {},
-          ...headers,
-        },
-      })
-    }
-    return this._axios.request({
-      method: method as any,
-      url,
-      params: query,
-      headers: {
-        ...this.accessToken ? { Authorization: `Bearer ${this.accessToken}` } : {},
-        ...headers,
-      },
-      data: stringify(params),
-    })
   }
 }

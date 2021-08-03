@@ -1,9 +1,14 @@
-import { OAuth, OAuth2, AuthUser, AccessTokenResponse, AccessTokenRespnoseOptions } from '@openauth/core'
-import { stringify } from 'querystring'
+import { OAuth2, AuthUser, AccessTokenResponse, OAuth2Options } from '@openauth/core'
 
 import { KakaoClient } from './kakao-client'
 
-export class KakaoOAuth extends OAuth2<KakaoClient> implements OAuth {
+export type KakaoOAuthOptions = OAuth2Options
+
+export class KakaoOAuth extends OAuth2<KakaoClient> {
+
+  apiBaseUri(): string {
+    return 'https://kapi.kakao.com/v2'
+  }
 
   authRequestUri(): string {
     return 'https://kauth.kakao.com/oauth/authorize'
@@ -11,11 +16,6 @@ export class KakaoOAuth extends OAuth2<KakaoClient> implements OAuth {
 
   accessTokenRequestUri(): string {
     return 'https://kauth.kakao.com/oauth/token'
-  }
-
-  async requestAccessToken(code: string, options: AccessTokenRespnoseOptions = {}): Promise<Record<string, any>> {
-    const { data } = await this._axiosClient.post(this.accessTokenRequestUri(), stringify(this.getAccessTokenFields(code, options)))
-    return data
   }
 
   mapDataToAccessTokenResponse(body: Record<string, any>): AccessTokenResponse {
@@ -29,7 +29,11 @@ export class KakaoOAuth extends OAuth2<KakaoClient> implements OAuth {
   }
 
   createClient(accessToken?: string): KakaoClient {
-    return new KakaoClient(this._axiosClient, accessToken)
+    return new KakaoClient({
+      baseUri: this.apiBaseUri(),
+      fetch: this._fetch,
+      accessToken,
+    })
   }
 
   async getAuthUser(accessToken: string): Promise<AuthUser> {

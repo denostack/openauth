@@ -4,7 +4,7 @@ import { InstagramClient } from './instagram-client'
 
 export type InstagramOAuthOptions = OAuth2Options
 
-export class InstagramOAuth extends OAuth2 {
+export class InstagramOAuth extends OAuth2<InstagramClient> {
 
   apiBaseUri(): string {
     return 'https://graph.instagram.com'

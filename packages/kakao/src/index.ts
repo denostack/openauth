@@ -2,4 +2,4 @@
 export * from './interfaces'
 
 export { KakaoClient } from './kakao-client'
-export { KakaoOAuth } from './kakao-oauth'
+export { KakaoOAuth, KakaoOAuthOptions } from './kakao-oauth'

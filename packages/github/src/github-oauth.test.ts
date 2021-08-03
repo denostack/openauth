@@ -14,8 +14,8 @@ describe('@openauth/github GithubOAuth', () => {
       redirectUri: REDIRECT_URI,
       scope: SCOPE,
     })
-    const state = 'randomstring'
 
+    const state = 'randomstring'
     const uri = await oauth.getAuthRequestUri({ state })
 
     expect(uri).toEqual(`https://github.com/login/oauth/authorize?response_type=code&client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&state=${state}&scope=${encodeURIComponent(SCOPE.join(' ')).replace(/%20/g, '+')}`)
