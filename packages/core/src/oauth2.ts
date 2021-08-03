@@ -51,13 +51,14 @@ export class OAuth2<TClient extends Client = Client> {
   }
 
   getAuthRequestFiels(options: AuthRequestUriOptions = {}): Record<string, any> {
-    const scope = options.scope ?? this.options.scope
+    const scope = ('scope' in options ? options.scope : this.options.scope) ?? []
+    const scopeAsArray = Array.isArray(scope) ? scope : [scope]
     return {
       response_type: options.responseType ?? 'code',
       client_id: options.clientId ?? this.options.clientId,
       redirect_uri: options.redirectUri ?? this.options.redirectUri,
       state: options.state,
-      scope: scope ? this.buildScopes(Array.isArray(scope) ? scope : [scope]) : null,
+      ...scopeAsArray.length > 0 ? { scope: this.buildScopes(scopeAsArray) } : {},
     }
   }
 

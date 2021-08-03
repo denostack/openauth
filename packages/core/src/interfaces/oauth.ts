@@ -8,7 +8,7 @@ export interface AuthRequestUriOptions {
   responseType?: string
   clientId?: string
   redirectUri?: string
-  scope?: string[] | string
+  scope?: string[] | string | null
   state?: string
 }
 
