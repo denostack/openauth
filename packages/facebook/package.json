@@ -1,6 +1,6 @@
 {
   "name": "@openauth/facebook",
-  "version": "0.3.1",
+  "version": "0.4.0",
   "description": "OAuth facebook library.",
   "keywords": [
     "facebook",
@@ -19,7 +19,7 @@
     "build": "rimraf ./lib && tsc"
   },
   "dependencies": {
-    "@openauth/core": "^0.3.1"
+    "@openauth/core": "^0.4.0"
   },
   "gitHead": "7f2373f1073fb0ec9921728fd03ca776d052d89d"
 }
