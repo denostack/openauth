@@ -30,7 +30,7 @@ export class GoogleOAuth extends OAuth2<GoogleClient> {
     })
   }
 
-  async requestAccessToken(code: string, options: AccessTokenRespnoseOptions = {}): Promise<Record<string, any>> {
+  requestAccessToken(code: string, options: AccessTokenRespnoseOptions = {}): Promise<Record<string, any>> {
     return this.getClient().post(this.accessTokenRequestUri(), this.getAccessTokenFields(code, options)).then(({ data }) => data)
   }
 

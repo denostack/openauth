@@ -1,17 +1,14 @@
-import { AccessTokenRespnoseOptions, AuthUser, Client, OAuth, OAuth2, AccessTokenResponse } from '@openauth/core'
-import { stringify } from 'querystring'
+import { AuthUser, Client, OAuth2, OAuth2Options, AccessTokenRespnoseOptions } from '@openauth/core'
 
 import { InstagramClient } from './instagram-client'
 
-export interface InstagramOAuthOptions {
-  version?: string
-  clientId: string
-  redirectUri: string
-  clientSecret: string
-  scope: string | string[]
-}
+export type InstagramOAuthOptions = OAuth2Options
 
-export class InstagramOAuth extends OAuth2 implements OAuth {
+export class InstagramOAuth extends OAuth2 {
+
+  apiBaseUri(): string {
+    return 'https://graph.instagram.com'
+  }
 
   authRequestUri(): string {
     return 'https://api.instagram.com/oauth/authorize'
@@ -22,12 +19,21 @@ export class InstagramOAuth extends OAuth2 implements OAuth {
   }
 
   createClient(accessToken?: string): Client {
-    return new InstagramClient(this._axiosClient, accessToken)
+    return new InstagramClient({
+      baseUri: this.apiBaseUri(),
+      fetch: this._fetch,
+      accessToken,
+    })
   }
 
-  async requestAccessToken(code: string, options: AccessTokenRespnoseOptions = {}): Promise<Record<string, any>> {
-    const { data } = await this._axiosClient.post(this.accessTokenRequestUri(), stringify(this.getAccessTokenFields(code, options)))
-    return data
+  requestAccessToken(code: string, options: AccessTokenRespnoseOptions = {}): Promise<Record<string, any>> {
+    return this.getClient().post(
+      this.accessTokenRequestUri(),
+      this.getAccessTokenFields(code, options),
+      {
+        'content-type': 'application/x-www-form-urlencoded',
+      },
+    ).then(({ data }) => data)
   }
 
   async getAuthUser(accessToken: string): Promise<AuthUser> {
