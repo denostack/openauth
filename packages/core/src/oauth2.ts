@@ -16,12 +16,12 @@ export interface OAuth2Options {
   redirectUri: string
   code?: string
   scope?: string[] | string
-  fetch?: (input: Request | string, init?: RequestInit) => Promise<Response>
+  fetch?: typeof fetch
 }
 
 export class OAuth2<TClient extends Client = Client> {
 
-  _fetch: (input: Request | string, init?: RequestInit) => Promise<Response>
+  _fetch: typeof fetch
   _unauthClient?: TClient
 
   constructor(public options: OAuth2Options) {

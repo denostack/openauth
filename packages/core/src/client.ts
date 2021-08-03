@@ -5,12 +5,12 @@ import { HttpPath } from './interfaces/oauth'
 export interface ClientOptions {
   baseUri: string
   accessToken?: string
-  fetch: (input: Request | string, init?: RequestInit) => Promise<Response>
+  fetch: typeof fetch
 }
 
 export class Client {
 
-  _fetch: (input: Request | string, init?: RequestInit) => Promise<Response>
+  _fetch: typeof fetch
 
   constructor(public options: ClientOptions) {
     this._fetch = options.fetch
