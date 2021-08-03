@@ -9,8 +9,8 @@ const CLIENT_ID = process.env.NAVER_CLIENT_ID ?? ''
 const CLIENT_SECRET = process.env.NAVER_CLIENT_SECRET ?? ''
 const REDIRECT_URI = process.env.NAVER_REDIRECT_URI ?? ''
 
-const NAVER_USERNAME = process.env.NAVER_USERNAME ?? ''
-const NAVER_PASSWORD = process.env.NAVER_PASSWORD ?? ''
+const USERNAME = process.env.NAVER_USERNAME ?? ''
+const PASSWORD = process.env.NAVER_PASSWORD ?? ''
 
 async function loginAndGetAuthCode(url: string, redirectUri: string): Promise<string> {
   const browser = await chromium.launch({ headless: PLAYWRIGHT_HEADLESS })
@@ -21,8 +21,8 @@ async function loginAndGetAuthCode(url: string, redirectUri: string): Promise<st
 
   await page.waitForSelector('#id, #pw')
 
-  await page.fill('#id', NAVER_USERNAME)
-  await page.fill('#pw', NAVER_PASSWORD)
+  await page.fill('#id', USERNAME)
+  await page.fill('#pw', PASSWORD)
 
   await Promise.all([
     page.waitForNavigation(),
@@ -54,7 +54,7 @@ async function loginAndGetAuthCode(url: string, redirectUri: string): Promise<st
 
 describe('@openauth/naver ui test', () => {
 
-  if (!CLIENT_ID || !CLIENT_SECRET) {
+  if (!USERNAME || !PASSWORD) {
     it.skip('skip', () => void 0)
     return
   }

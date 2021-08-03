@@ -9,8 +9,8 @@ const CLIENT_ID = process.env.KAKAO_CLIENT_ID ?? ''
 const CLIENT_SECRET = process.env.KAKAO_CLIENT_SECRET ?? ''
 const REDIRECT_URI = process.env.KAKAO_REDIRECT_URI ?? ''
 
-const KAKAO_USERNAME = process.env.KAKAO_USERNAME ?? ''
-const KAKAO_PASSWORD = process.env.KAKAO_PASSWORD ?? ''
+const USERNAME = process.env.KAKAO_USERNAME ?? ''
+const PASSWORD = process.env.KAKAO_PASSWORD ?? ''
 
 async function loginAndGetAuthCode(url: string, redirectUri: string): Promise<string> {
   const browser = await chromium.launch({ headless: PLAYWRIGHT_HEADLESS })
@@ -21,8 +21,8 @@ async function loginAndGetAuthCode(url: string, redirectUri: string): Promise<st
 
   await page.waitForSelector('#id_email_2, #id_password_3')
 
-  await page.fill('#id_email_2', KAKAO_USERNAME)
-  await page.fill('#id_password_3', KAKAO_PASSWORD)
+  await page.fill('#id_email_2', USERNAME)
+  await page.fill('#id_password_3', PASSWORD)
 
   await Promise.all([
     page.waitForNavigation(),
@@ -60,7 +60,7 @@ async function loginAndGetAuthCode(url: string, redirectUri: string): Promise<st
 
 describe('@openauth/kakao ui test', () => {
 
-  if (!CLIENT_ID) {
+  if (!USERNAME || !PASSWORD) {
     it.skip('skip', () => void 0)
     return
   }
@@ -79,9 +79,9 @@ describe('@openauth/kakao ui test', () => {
 
     expect(authUser).toEqual({
       id: expect.any(String),
-      email: expect.nullOrAny(String),
-      nickname: expect.nullOrAny(String),
-      avatar: expect.nullOrAny(String),
+      email: expect.any(String),
+      nickname: expect.any(String),
+      avatar: expect.any(String),
       raw: expect.any(Object),
     })
 

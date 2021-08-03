@@ -1,3 +1,5 @@
 
+export * from './api'
+
 export { NaverClient } from './naver-client'
-export { NaverOAuth } from './naver-oauth'
+export { NaverOAuth, NaverOAuthOptions } from './naver-oauth'

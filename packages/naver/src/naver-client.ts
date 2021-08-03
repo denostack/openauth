@@ -1,29 +1,28 @@
-import { BaseClient, ClientPath } from '@openauth/core'
-import { stringify } from 'querystring'
+import { Client, HttpPath } from '@openauth/core'
 
-export class NaverClient extends BaseClient {
+import { NaverApiResult, NidMe } from './api'
 
-  request<TData = any>(method: string, path: ClientPath, params: Record<string, any> = {}, headers: Record<string, any> = {}): Promise<{ headers: any, data: TData }> {
-    const url = `https://openapi.naver.com/v1/${(typeof path === 'object' ? path.path : path).replace(/^\/+/, '')}`
-    const query = typeof path === 'object' ? path.query : {}
-    if (method.toLocaleLowerCase() === 'get') {
-      return this._axios.get(url, {
-        params: query,
-        headers: {
-          ...this.accessToken ? { Authorization: `Bearer ${this.accessToken}` } : {},
-          ...headers,
-        },
-      })
-    }
-    return this._axios.request({
-      method: method as any,
-      url,
-      params: query,
-      headers: {
-        ...this.accessToken ? { Authorization: `Bearer ${this.accessToken}` } : {},
-        ...headers,
-      },
-      data: stringify(params),
+export class NaverClient extends Client {
+
+  request<TData = any>(method: string, path: string | HttpPath, params: Record<string, any> = {}, headers: Record<string, any> = {}): Promise<{ status: number, headers: any, data: TData }> {
+    return super.request(method, path, params, headers).then((response) => {
+      if (response.status >= 400) {
+        const { error_description: description, ...errorProps } = response.data
+        throw Object.assign(new Error(description || 'Error occured'), {
+          ...errorProps,
+        })
+      }
+      if (response.data.error) {
+        const { error_description: description, ...errorProps } = response.data
+        throw Object.assign(new Error(description || 'Error occured'), {
+          ...errorProps,
+        })
+      }
+      return response
     })
+  }
+
+  getNidMe(): Promise<NidMe> {
+    return this.get<NaverApiResult<NidMe>>('nid/me').then(({ data }) => data.response)
   }
 }

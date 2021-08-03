@@ -1,18 +1,14 @@
-import { Client, OAuth, OAuth2, AuthUser, AccessTokenResponse } from '@openauth/core'
+import { OAuth2, AuthUser, AccessTokenResponse, OAuth2Options } from '@openauth/core'
 
 import { NaverClient } from './naver-client'
 
-interface GetMeResponse {
-  resultcode: '00'
-  message: 'success'
-  response: {
-    id: string,
-    email: string,
-    name: string,
-  }
-}
+export type NaverOAuthOptions = OAuth2Options
 
-export class NaverOAuth extends OAuth2 implements OAuth {
+export class NaverOAuth extends OAuth2<NaverClient> {
+
+  apiBaseUri(): string {
+    return 'https://openapi.naver.com/v1'
+  }
 
   authRequestUri(): string {
     return 'https://nid.naver.com/oauth2.0/authorize'
@@ -31,17 +27,21 @@ export class NaverOAuth extends OAuth2 implements OAuth {
     }
   }
 
-  createClient(accessToken?: string): Client {
-    return new NaverClient(this._axiosClient, accessToken)
+  createClient(accessToken?: string): NaverClient {
+    return new NaverClient({
+      baseUri: this.apiBaseUri(),
+      fetch: this._fetch,
+      accessToken,
+    })
   }
 
   async getAuthUser(accessToken: string): Promise<AuthUser> {
-    const { data } = await this.getClient(accessToken).get<GetMeResponse>('nid/me')
+    const data = await this.getClient(accessToken).getNidMe()
     return {
-      id: data.response.id,
-      name: data.response.name,
-      email: data.response.email,
-      raw: data.response,
+      id: data.id,
+      name: data.name,
+      email: data.email,
+      raw: data,
     }
   }
 }
