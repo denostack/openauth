@@ -1,11 +1,5 @@
-/node_modules
-
-.vscode
-.idea
+.npm
+coverage
+coverage.lcov
 .envrc
-
-npm-debug.log*
-yarn-error.log
-
-/packages/*/node_modules
-/packages/*/lib
+node_modules/
