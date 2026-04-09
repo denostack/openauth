@@ -1,12 +1,12 @@
-import { assertEquals, fail } from "@std/assert";
+import { assertEquals, assertInstanceOf, fail } from "@std/assert";
 import { assertSpyCall, assertSpyCalls, stub } from "@std/testing/mock";
 import { describe, it } from "@std/testing/bdd";
-import { FetchHttpClient } from "../core/mod.ts";
+import { FetchHttpClient, OAuthError } from "../core/mod.ts";
 import { GoogleOAuth } from "./google_oauth.ts";
 
 const CLIENT_ID = Deno.env.get("GOOGLE_CLIENT_ID") ?? "1234567890";
 const CLIENT_SECRET = Deno.env.get("GOOGLE_CLIENT_SECRET") ?? "1234567890abcdefghijklmnopqrstuvwxyz";
-const REDIRECT_URI = Deno.env.get("GOOGLE_REDIRECT_URI") ?? "https://openauth.denostack.com/callback/google";
+const REDIRECT_URI = "https://openauth.denostack.com/callback/google";
 const SCOPE = ["openid", "profile", "email"];
 
 describe("GoogleOAuth", () => {
@@ -94,6 +94,7 @@ describe("GoogleOAuth", () => {
         data: {
           error: "invalid_grant",
           error_description: "Malformed auth code.",
+          unknown_params: "unknown_value",
         },
       });
     });
@@ -112,11 +113,10 @@ describe("GoogleOAuth", () => {
         await oauth.getAccessTokenResponse(AUTHCODE);
         fail();
       } catch (e) {
-        assertEquals(
-          (e as Error & { error: string }).error,
-          "invalid_grant",
-        );
-        assertEquals((e as Error).message, "Malformed auth code.");
+        assertInstanceOf(e, OAuthError);
+        assertEquals(e.type, "invalid_grant");
+        assertEquals(e.message, "Malformed auth code.");
+        assertEquals(e.extra, { unknown_params: "unknown_value" });
       }
 
       assertSpyCalls(requestStub, 1);

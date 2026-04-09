@@ -3,11 +3,43 @@ import {
   type AccessTokenResponseOptions,
   type AuthUser,
   OAuth20,
-} from "../core/oauth20.ts";
-import { OAuthError } from "../core/oauth_error.ts";
-import type { GetUserMeResponse } from "./interfaces.ts";
+  OAuthError,
+} from "../core/mod.ts";
 
-export class Kakao extends OAuth20 {
+export interface UserRawData {
+  id: number;
+  connected_at: string; // "2026-04-09T14:50:25Z"
+  properties?: {
+    nickname?: string;
+    profile_image?: string;
+    thumbnail_image?: string;
+  };
+  kakao_account?: {
+    profile_needs_agreement?: boolean;
+    profile?: {
+      nickname?: string;
+      thumbnail_image_url?: string;
+      profile_image_url: string;
+    };
+    has_email?: boolean;
+    email_needs_agreement?: boolean;
+    is_email_valid?: boolean;
+    is_email_verified?: boolean;
+    email?: string;
+    has_age_range?: boolean;
+    age_range_needs_agreement?: boolean;
+    age_range?: string;
+    has_birthday?: boolean;
+    birthday_needs_agreement?: boolean;
+    birthday?: string;
+    birthday_type?: "SOLAR" | "LUNAR";
+    has_gender?: boolean;
+    gender_needs_agreement?: boolean;
+    gender?: "male" | "female";
+  };
+}
+
+export class KakaoOAuth extends OAuth20 {
   apiBaseUri(): string {
     return "https://kapi.kakao.com/v2";
   }
@@ -20,41 +52,23 @@ export class Kakao extends OAuth20 {
     return "https://kauth.kakao.com/oauth/token";
   }
 
-  override mapDataToAccessTokenResponse(
-    // deno-lint-ignore no-explicit-any
-    body: Record<string, any>,
-  ): AccessTokenResponse {
-    return {
-      accessToken: body.access_token,
-      tokenType: body.token_type,
-      expiresIn: body.expires_in,
-      refreshToken: body.refresh_token,
-      refreshTokenExpiresIn: body.refresh_token_expires_in,
-    };
-  }
-
   override requestAccessToken(
     code: string,
     options: AccessTokenResponseOptions = {},
-    // deno-lint-ignore no-explicit-any
-  ): Promise<Record<string, any>> {
+  ): Promise<Record<string, unknown>> {
     const url = new URL(this.accessTokenRequestUri());
     url.search = new URLSearchParams(
       this.getAccessTokenFields(code, options),
     ).toString();
-    // deno-lint-ignore no-explicit-any
-    return this.httpClient.request<Record<string, any>>("GET", url).then(
+    return this.httpClient.request<Record<string, unknown>>("GET", url).then(
       (res) => {
         if (res.status >= 400) {
-          const {
-            error_description: description,
-            error_code: errorCode,
-            ...errorProps
-          } = res.data;
-          throw Object.assign(
-            new OAuthError(description || "Error occurred"),
-            { code: errorCode, ...errorProps },
-          );
+          const { error_description: message, error: type, ...extra } = res.data as {
+            error: string;
+            error_description: string;
+            error_code: string;
+          };
+          throw new OAuthError(message || "Error occurred", type, extra);
         }
         return res.data;
       },
@@ -63,7 +77,7 @@ export class Kakao extends OAuth20 {
 
   async getAuthUser(accessToken: string): Promise<AuthUser> {
     const url = `${this.apiBaseUri()}/user/me`;
-    const res = await this.httpClient.request<GetUserMeResponse>(
+    const res = await this.httpClient.request<UserRawData>(
       "GET",
       url,
       {},

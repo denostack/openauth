@@ -27,10 +27,12 @@ export class GoogleOAuth extends OAuth20 {
       this.getAccessTokenFields(code, options),
     ).then((res) => {
       if (res.status >= 400) {
-        const data = res.data as { error: string; error_description: string; message?: string };
-        const message = data.error_description || data.message ||
-          "Error occurred";
-        throw Object.assign(new OAuthError(message), data);
+        const { error_description: message, error: type, ...extra } = res.data as {
+          error: string;
+          error_description: string;
+          message?: string;
+        };
+        throw new OAuthError(message || "Error occurred", type, extra);
       }
       return res.data;
     });

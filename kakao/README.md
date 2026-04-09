@@ -34,8 +34,7 @@ OAuth login link.
 oauth.getAuthRequestUri(); // print https://kauth.kakao.com/oauth/authorize?...
 ```
 
-After logging in, you will be redirected to the `redirectUri` page with the
-`code` value.
+After logging in, you will be redirected to the `redirectUri` page with the `code` value.
 
 ```typescript
 const code = "AQAO3q3...";
