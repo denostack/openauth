@@ -5,7 +5,7 @@ export interface HttpClientResponse<T> {
 }
 
 export interface HttpClient {
-  request<T = unknown>(
+  request<T>(
     method: string,
     path: string | URL,
     params?: Record<string, unknown>,

@@ -40,7 +40,23 @@ const { accessToken } = await oauth.getAccessTokenResponse(code);
 
 // 3. Get user profile.
 await oauth.getAuthUser(accessToken);
-
-// 4. Other API
-await oauth.getClient(accessToken).get("oauth2/v3/userinfo");
+/*
+{
+  id: "123456789",
+  email: "wan2land@gmail.com",
+  name: "Cris Jun",
+  avatar: "https://corgi.photos/200/200",
+  raw: {
+    sub: "123456789",
+    name: "Cris Jun",
+    given_name: "Cris",
+    family_name: "Jun",
+    picture: "https://corgi.photos/200/200",
+    email: "wan2land@gmail.com",
+    email_verified: true,
+    locale: "ko",
+    ...
+  },
+}
+*/
 ```

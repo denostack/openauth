@@ -1,11 +1,6 @@
-import {
-  type AccessTokenResponseOptions,
-  type AuthUser,
-  OAuth20,
-} from "../core/oauth20.ts";
-import { OAuthError } from "../core/oauth_error.ts";
+import { type AccessTokenResponseOptions, type AuthUser, OAuth20, OAuthError } from "../core/mod.ts";
 
-export class Google extends OAuth20 {
+export class GoogleOAuth extends OAuth20 {
   apiBaseUri(): string {
     return "https://www.googleapis.com";
   }
@@ -25,16 +20,14 @@ export class Google extends OAuth20 {
   override requestAccessToken(
     code: string,
     options: AccessTokenResponseOptions = {},
-    // deno-lint-ignore no-explicit-any
-  ): Promise<Record<string, any>> {
+  ) {
     return this.httpClient.request<Record<string, unknown>>(
       "POST",
       this.accessTokenRequestUri(),
       this.getAccessTokenFields(code, options),
     ).then((res) => {
       if (res.status >= 400) {
-        // deno-lint-ignore no-explicit-any
-        const data = res.data as any;
+        const data = res.data as { error: string; error_description: string; message?: string };
         const message = data.error_description || data.message ||
           "Error occurred";
         throw Object.assign(new OAuthError(message), data);
@@ -52,8 +45,7 @@ export class Google extends OAuth20 {
       authorization: `Bearer ${accessToken}`,
     });
     if (res.status >= 400) {
-      // deno-lint-ignore no-explicit-any
-      const data = res.data as any;
+      const data = res.data as { error: string; error_description: string; message?: string };
       const message = data.error_description || data.message ||
         "Error occurred";
       throw Object.assign(new OAuthError(message), data);

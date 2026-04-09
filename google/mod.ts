@@ -1,9 +1,2 @@
-export type {
-  AccessTokenResponse,
-  AccessTokenResponseOptions,
-  AuthRequestUriOptions,
-  AuthUser,
-  OAuth2Options,
-} from "../core/oauth20.ts";
-
-export { Google } from "./google.ts";
+export type * from "../core/mod.ts";
+export { GoogleOAuth } from "./google_oauth.ts";
