@@ -1,7 +1,7 @@
-import type { HttpClient, HttpClientResponse } from "./http_client.ts";
+import { type HttpClient, HttpClientError, type HttpClientResponse } from "./http_client.ts";
 
 export class FetchHttpClient implements HttpClient {
-  request<T = unknown>(
+  async request<T = unknown>(
     method: string,
     path: string | URL,
     params: Record<string, unknown> = {},
@@ -24,28 +24,43 @@ export class FetchHttpClient implements HttpClient {
       body = JSON.stringify(params);
     }
 
-    return fetch(path, {
+    const response = await fetch(path, {
       method,
       headers,
       ...method !== "GET" ? { body } : {},
-    }).then((response) => {
-      const status = response.status;
-      if (status >= 300 && status < 400) {
-        return this.request<T>(
-          method,
-          response.headers.get("location") || "",
-          params,
-          headers,
-        );
-      }
-      return response.json().then((data) => {
-        const headers = Object.fromEntries([...response.headers]);
-        return {
-          status,
-          headers,
-          data: data as T,
-        };
-      });
     });
+
+    const status = response.status;
+    if (status >= 300 && status < 400) {
+      return this.request<T>(
+        method,
+        response.headers.get("location") || "",
+        params,
+        headers,
+      );
+    }
+    const contentType = response.headers.get("content-type");
+    const data = contentType?.includes("application/json") ? await response.json() : {};
+    console.log(response.status, response.statusText, data);
+
+    if (response.status >= 400) {
+      throw new HttpClientError(
+        response.statusText,
+        response.status,
+        data,
+      );
+    }
+    if ("error" in data) {
+      throw new HttpClientError(
+        response.statusText,
+        response.status,
+        data,
+      );
+    }
+    return {
+      status,
+      headers: Object.fromEntries([...response.headers]),
+      data: data as T,
+    };
   }
 }

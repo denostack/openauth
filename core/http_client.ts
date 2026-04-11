@@ -1,3 +1,14 @@
+export class HttpClientError extends Error {
+  public data: Record<string, unknown>;
+  public status: number;
+  constructor(message: string, status: number, data: Record<string, unknown>) {
+    super(message);
+    this.name = "HttpClientError";
+    this.status = status;
+    this.data = data;
+  }
+}
+
 export interface HttpClientResponse<T> {
   status: number;
   headers: Record<string, string>;

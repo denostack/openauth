@@ -55,13 +55,16 @@ export abstract class OAuth20 {
 
   abstract accessTokenRequestUri(): string;
 
+  defaultScopes(): string[] {
+    return [];
+  }
+
   buildScopes(scopes: string[]): string {
     return scopes.join(",");
   }
 
   getAuthRequestFields(options: AuthRequestUriOptions = {}): Record<string, string> {
-    const scope = ("scope" in options ? options.scope : this.options.scope) ??
-      [];
+    const scope = ("scope" in options ? options.scope : this.options.scope) ?? this.defaultScopes();
     const scopeAsArray = Array.isArray(scope) ? scope : [scope];
     return {
       response_type: options.responseType ?? "code",
@@ -78,10 +81,7 @@ export abstract class OAuth20 {
    * @see https://tools.ietf.org/html/rfc6749#section-4.1.1
    */
   getAuthRequestUri(options: AuthRequestUriOptions = {}): Promise<string> {
-    const url = new URL(this.authRequestUri());
-    url.search = new URLSearchParams(this.getAuthRequestFields(options))
-      .toString();
-    return Promise.resolve(url.toString());
+    return Promise.resolve(`${this.authRequestUri()}?${new URLSearchParams(this.getAuthRequestFields(options))}`);
   }
 
   getAccessTokenFields(code: string, options: AccessTokenResponseOptions = {}): Record<string, string> {
@@ -93,6 +93,7 @@ export abstract class OAuth20 {
       code,
       grant_type: "authorization_code",
       ...options.codeVerifier ? { code_verifier: options.codeVerifier } : {},
+      ...options.state ? { state: options.state } : {},
     };
   }
 
@@ -101,18 +102,8 @@ export abstract class OAuth20 {
    * @see https://tools.ietf.org/html/rfc6749#section-4.1.3
    */
   requestAccessToken(code: string, options: AccessTokenResponseOptions = {}): Promise<Record<string, unknown>> {
-    const url = new URL(this.accessTokenRequestUri());
-    url.search = new URLSearchParams(
-      this.getAccessTokenFields(code, options),
-    ).toString();
-    return this.httpClient.request<Record<string, unknown>>("GET", url).then(
-      (res) => {
-        if ("error" in res) {
-          throw new OAuthError("Error Occurred");
-        }
-        return res.data;
-      },
-    );
+    const url = `${this.accessTokenRequestUri()}?${new URLSearchParams(this.getAccessTokenFields(code, options))}`;
+    return this.httpClient.request<Record<string, unknown>>("GET", url).then((res) => res.data);
   }
 
   /**
@@ -121,9 +112,12 @@ export abstract class OAuth20 {
   mapDataToAccessTokenResponse(body: Record<string, unknown>): AccessTokenResponse {
     return {
       accessToken: body.access_token as string,
-      ...body.token_type ? { tokenType: body.token_type as string } : {},
-      ...typeof body.expires_in === "number" ? { expiresIn: body.expires_in as number } : {},
-      ...body.refresh_token ? { refreshToken: body.refresh_token as string } : {},
+      ...typeof body.token_type === "string" ? { tokenType: body.token_type } : {},
+      ...typeof body.expires_in === "number" ? { expiresIn: body.expires_in } : {},
+      ...typeof body.refresh_token === "string" ? { refreshToken: body.refresh_token } : {},
+      ...typeof body.refresh_token_expires_in === "number"
+        ? { refreshTokenExpiresIn: body.refresh_token_expires_in }
+        : {},
     };
   }
 
