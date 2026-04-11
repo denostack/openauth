@@ -34,8 +34,7 @@ OAuth login link.
 oauth.getAuthRequestUri(); // print https://nid.naver.com/oauth2.0/authorize?...
 ```
 
-After logging in, you will be redirected to the `redirectUri` page with the
-`code` value.
+After logging in, you will be redirected to the `redirectUri` page with the `code` value.
 
 ```typescript
 const code = "AQAO3q3...";

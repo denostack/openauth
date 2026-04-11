@@ -101,12 +101,12 @@ export abstract class OAuth20 implements OAuth {
   mapDataToAccessTokenResponse(data: Record<string, unknown>): AccessTokenResponse {
     return {
       accessToken: data.access_token as string,
-      ...typeof data.token_type === "string" ? { tokenType: data.token_type } : {},
-      ...typeof data.expires_in === "number" ? { expiresIn: data.expires_in } : {},
-      ...typeof data.refresh_token === "string" ? { refreshToken: data.refresh_token } : {},
-      ...typeof data.refresh_token_expires_in === "number"
-        ? { refreshTokenExpiresIn: data.refresh_token_expires_in }
-        : {},
+      ...typeof data.token_type === "string" && { tokenType: data.token_type },
+      ...typeof data.expires_in === "number" && { expiresIn: data.expires_in },
+      ...typeof data.expires_in === "string" && { expiresIn: +data.expires_in },
+      ...typeof data.refresh_token === "string" && { refreshToken: data.refresh_token },
+      ...typeof data.refresh_token_expires_in === "number" &&
+        { refreshTokenExpiresIn: data.refresh_token_expires_in },
     };
   }
 
