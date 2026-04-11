@@ -1,19 +1,19 @@
 import { assertEquals, assertInstanceOf, fail } from "@std/assert";
 import { assertSpyCall, assertSpyCalls, stub } from "@std/testing/mock";
 import { FetchHttpClient, type HttpClient, HttpClientError, type OAuth, OAuthError } from "../core/mod.ts";
-import { GithubOAuth } from "./github_oauth.ts";
+import { FacebookOAuth } from "./facebook_oauth.ts";
 import { beforeEach, describe, it } from "@std/testing/bdd";
 
-const CLIENT_ID = Deno.env.get("GITHUB_CLIENT_ID") ?? "1234567890";
-const CLIENT_SECRET = Deno.env.get("GITHUB_CLIENT_SECRET") ?? "1234567890abcdefghijklmnopqrstuvwxyz";
-const REDIRECT_URI = "https://openauth.denostack.com/callback/github";
+const CLIENT_ID = Deno.env.get("FACEBOOK_CLIENT_ID") ?? "1234567890";
+const CLIENT_SECRET = Deno.env.get("FACEBOOK_CLIENT_SECRET") ?? "1234567890abcdefghijklmnopqrstuvwxyz";
+const REDIRECT_URI = "https://openauth.denostack.com/callback/facebook";
 
-describe("GithubOAuth", () => {
+describe("FacebookOAuth", () => {
   let httpClient: HttpClient;
   let oauth: OAuth;
   beforeEach(() => {
     httpClient = new FetchHttpClient();
-    oauth = new GithubOAuth({
+    oauth = new FacebookOAuth({
       client: httpClient,
       clientId: CLIENT_ID,
       clientSecret: CLIENT_SECRET,
@@ -25,12 +25,12 @@ describe("GithubOAuth", () => {
     const uri = await oauth.getAuthRequestUri({ state: "randomstring" });
     assertEquals(
       uri,
-      `https://github.com/login/oauth/authorize?${new URLSearchParams({
+      `https://www.facebook.com/${(oauth as FacebookOAuth).version}/dialog/oauth?${new URLSearchParams({
         response_type: "code",
         client_id: CLIENT_ID,
         redirect_uri: REDIRECT_URI,
         state: "randomstring",
-        scope: "user:email",
+        scope: "email",
       })}`,
     );
   });
@@ -38,16 +38,16 @@ describe("GithubOAuth", () => {
   it("getAuthRequestUri with custom scopes", async () => {
     const uri = await oauth.getAuthRequestUri({
       state: "randomstring",
-      scope: ["read:user", "user:email", "user:follow"],
+      scope: ["email", "public_profile"],
     });
     assertEquals(
       uri,
-      `https://github.com/login/oauth/authorize?${new URLSearchParams({
+      `https://www.facebook.com/${(oauth as FacebookOAuth).version}/dialog/oauth?${new URLSearchParams({
         response_type: "code",
         client_id: CLIENT_ID,
         redirect_uri: REDIRECT_URI,
         state: "randomstring",
-        scope: "read:user user:email user:follow",
+        scope: "email,public_profile",
       })}`,
     );
   });
@@ -58,33 +58,33 @@ describe("GithubOAuth", () => {
         status: 200,
         headers: {},
         data: {
-          access_token: "GITHUB_ACCESS_TOKEN_1234",
+          access_token: "FACEBOOK_ACCESS_TOKEN_1234",
           token_type: "bearer",
-          scope: "read:user,user:email,user:follow",
+          expires_in: 5183941,
         },
       });
     });
 
     try {
-      const code = "GITHUB_CODE_1234";
-      const state = "randomstring";
-      const result = await oauth.getAccessTokenResponse(code, { state });
+      const code = "TOKEN_FROM_FACEBOOK_1234567890";
+
+      const result = await oauth.getAccessTokenResponse(code);
       assertEquals(result, {
-        accessToken: "GITHUB_ACCESS_TOKEN_1234",
+        accessToken: "FACEBOOK_ACCESS_TOKEN_1234",
         tokenType: "bearer",
+        expiresIn: 5183941,
       });
 
       assertSpyCalls(requestStub, 1);
       assertSpyCall(requestStub, 0, {
         args: [
           "GET",
-          `https://github.com/login/oauth/access_token?${new URLSearchParams({
+          `https://graph.facebook.com/${(oauth as FacebookOAuth).version}/oauth/access_token?${new URLSearchParams({
             client_id: CLIENT_ID,
             client_secret: CLIENT_SECRET,
             redirect_uri: REDIRECT_URI,
             code,
             grant_type: "authorization_code",
-            state,
           })}`,
         ],
       });
@@ -96,30 +96,26 @@ describe("GithubOAuth", () => {
   it("getAccessTokenResponse fail", async () => {
     const requestStub = stub(httpClient, "request", () => {
       return Promise.reject(
-        new HttpClientError("OK", 200, {
-          error: "bad_verification_code",
-          error_description: "The code passed is incorrect or expired.",
-          error_uri:
-            "https://docs.github.com/apps/managing-oauth-apps/troubleshooting-oauth-app-access-token-request-errors/#bad-verification-code",
-          unknown_params: "unknown_value",
+        new HttpClientError("Bad Request", 400, {
+          error: {
+            message: "Invalid verification code format.",
+            type: "OAuthException",
+            code: 100,
+            fbtrace_id: "AXXXXXXXX",
+          },
         }),
       );
     });
 
     try {
-      const code = "GITHUB_CODE_1234";
-      const state = "randomstring";
-      await oauth.getAccessTokenResponse(code, { state });
+      const code = "TOKEN_FROM_FACEBOOK_1234567890";
+      await oauth.getAccessTokenResponse(code);
       fail();
     } catch (e) {
       assertInstanceOf(e, OAuthError);
-      assertEquals(e.type, "bad_verification_code");
-      assertEquals(e.message, "The code passed is incorrect or expired.");
-      assertEquals(e.extra, {
-        error_uri:
-          "https://docs.github.com/apps/managing-oauth-apps/troubleshooting-oauth-app-access-token-request-errors/#bad-verification-code",
-        unknown_params: "unknown_value",
-      });
+      assertEquals(e.type, "OAuthException");
+      assertEquals(e.message, "Invalid verification code format.");
+      assertEquals(e.extra, { code: 100, fbtrace_id: "AXXXXXXXX" });
     } finally {
       requestStub.restore();
     }
@@ -130,28 +126,22 @@ describe("GithubOAuth", () => {
       return Promise.resolve({
         status: 200,
         headers: {},
-        data: {
-          id: 12345,
-          avatar_url: "https://corgi.photos/400/400",
-          name: "Changwan Jun",
-          email: "wan2land@gmail.com",
-        },
+        data: { id: "123456789", email: "wan2land@gmail.com", name: "Changwan Jun" },
       });
     });
 
     try {
-      const ACCESS_TOKEN = "GITHUB_ACCESS_TOKEN_1234";
+      const ACCESS_TOKEN = "FACEBOOK_ACCESS_TOKEN_1234";
       const authUser = await oauth.getAuthUser(ACCESS_TOKEN);
       assertEquals(authUser, {
-        id: "12345",
+        id: "123456789",
         email: "wan2land@gmail.com",
         name: "Changwan Jun",
-        avatar: "https://corgi.photos/400/400",
+        avatar: `https://graph.facebook.com/${(oauth as FacebookOAuth).version}/123456789/picture?type=normal`,
         raw: {
-          id: 12345,
-          avatar_url: "https://corgi.photos/400/400",
-          name: "Changwan Jun",
+          id: "123456789",
           email: "wan2land@gmail.com",
+          name: "Changwan Jun",
         },
       });
 
@@ -159,7 +149,9 @@ describe("GithubOAuth", () => {
       assertSpyCall(requestStub, 0, {
         args: [
           "GET",
-          "https://api.github.com/user",
+          `https://graph.facebook.com/${(oauth as FacebookOAuth).version}/me?${new URLSearchParams({
+            fields: "id,email,name",
+          })}`,
           {},
           {
             authorization: `Bearer ${ACCESS_TOKEN}`,
@@ -175,25 +167,24 @@ describe("GithubOAuth", () => {
     const requestStub = stub(httpClient, "request", () => {
       return Promise.reject(
         new HttpClientError("Unauthorized", 401, {
-          message: "Bad credentials",
-          documentation_url: "https://docs.github.com/rest",
-          status: "401",
+          error: {
+            message: "Invalid OAuth access token - Cannot parse access token",
+            type: "OAuthException",
+            code: 190,
+            fbtrace_id: "AXXXXXX",
+          },
         }),
       );
     });
 
     try {
-      const ACCESS_TOKEN = "GITHUB_ACCESS_TOKEN_1234";
-      await oauth.getAuthUser(ACCESS_TOKEN);
+      await oauth.getAuthUser("BAD_TOKEN");
       fail();
     } catch (e) {
       assertInstanceOf(e, OAuthError);
-      assertEquals(e.type, "Unauthorized");
-      assertEquals(e.message, "Bad credentials");
-      assertEquals(e.extra, {
-        documentation_url: "https://docs.github.com/rest",
-        status: "401",
-      });
+      assertEquals(e.type, "OAuthException");
+      assertEquals(e.message, "Invalid OAuth access token - Cannot parse access token");
+      assertEquals(e.extra, { code: 190, fbtrace_id: "AXXXXXX" });
     } finally {
       requestStub.restore();
     }
