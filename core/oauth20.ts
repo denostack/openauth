@@ -48,8 +48,6 @@ export abstract class OAuth20 implements OAuth {
       redirect_uri: options.redirectUri ?? this.options.redirectUri,
       ...options.state ? { state: options.state } : {},
       ...scopeAsArray.length > 0 ? { scope: this.buildScopes(scopeAsArray) } : {},
-      ...options.codeChallenge ? { code_challenge: options.codeChallenge } : {},
-      ...options.codeChallengeMethod ? { code_challenge_method: options.codeChallengeMethod } : {},
     };
   }
 
@@ -68,17 +66,20 @@ export abstract class OAuth20 implements OAuth {
       redirect_uri: options.redirectUri ?? this.options.redirectUri,
       code,
       grant_type: "authorization_code",
-      ...options.codeVerifier ? { code_verifier: options.codeVerifier } : {},
       ...options.state ? { state: options.state } : {},
     };
   }
 
   createErrorFromHttpClientError(e: HttpClientError): OAuthError {
-    const { message, error: type, ...extra } = e.data as {
-      error: string;
-      message?: string;
-    };
-    return new OAuthError(message || "Error occurred", type, extra);
+    if ("error_description" in e.data) {
+      const { error_description: message, error: type, ...extra } = e.data as {
+        error: string;
+        error_description: string;
+      };
+      return new OAuthError(message || "Error occurred", type, extra);
+    }
+    const { message, ...extra } = e.data as { message?: string };
+    return new OAuthError(message || "Error occurred", e.message, extra);
   }
 
   /**

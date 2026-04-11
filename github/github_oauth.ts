@@ -1,4 +1,4 @@
-import { type AuthUser, HttpClientError, OAuth20, OAuthError } from "../core/mod.ts";
+import { type AuthUser, HttpClientError, OAuth20 } from "../core/mod.ts";
 
 export interface UserRawData {
   id: number;
@@ -24,19 +24,6 @@ export class GithubOAuth extends OAuth20 {
 
   override buildScopes(scopes: string[]): string {
     return scopes.join(" ");
-  }
-
-  override createErrorFromHttpClientError(e: HttpClientError) {
-    if (e.status === 401) {
-      const { message, ...extra } = e.data as { message: string };
-      return new OAuthError(message, e.message, extra);
-    }
-    const { error_description: message, error: type, ...extra } = e.data as {
-      error: string;
-      error_description: string;
-      error_uri: string;
-    };
-    return new OAuthError(message || "Error occurred", type, extra);
   }
 
   async getAuthUser(accessToken: string): Promise<AuthUser> {

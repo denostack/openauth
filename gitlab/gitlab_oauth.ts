@@ -1,26 +1,42 @@
-import { type AccessTokenResponseOptions, type AuthUser, HttpClientError, OAuth20 } from "../core/mod.ts";
+import {
+  type AccessTokenResponseOptions,
+  type AuthUser,
+  HttpClientError,
+  OAuth20,
+  type OAuth2Options,
+} from "../core/mod.ts";
 
 export interface UserRawData {
-  id: string;
+  id: number;
   username?: string;
-  avatar?: string;
-  global_name?: string;
+  name?: string;
+  avatar_url?: string;
   email?: string;
 }
 
-export class DiscordOAuth extends OAuth20 {
-  override defaultScopes = ["identify"];
+export interface GitlabOAuthOptions extends OAuth2Options {
+  host?: string;
+}
+
+export class GitlabOAuth extends OAuth20 {
+  override defaultScopes = ["read_user"];
+  host: string;
+
+  constructor(options: GitlabOAuthOptions) {
+    super(options);
+    this.host = (options.host ?? "https://gitlab.com").replace(/\/+$/, "");
+  }
 
   apiBaseUri(): string {
-    return "https://discord.com/api/v10";
+    return `${this.host}/api/v4`;
   }
 
   authRequestUri(): string {
-    return "https://discord.com/api/oauth2/authorize";
+    return `${this.host}/oauth/authorize`;
   }
 
   accessTokenRequestUri(): string {
-    return `${this.apiBaseUri()}/oauth2/token`;
+    return `${this.host}/oauth/token`;
   }
 
   override buildScopes(scopes: string[]): string {
@@ -46,16 +62,16 @@ export class DiscordOAuth extends OAuth20 {
 
   async getAuthUser(accessToken: string): Promise<AuthUser> {
     try {
-      const url = `${this.apiBaseUri()}/users/@me`;
+      const url = `${this.apiBaseUri()}/user`;
       const res = await this.httpClient.request<UserRawData>("GET", url, {}, {
         authorization: `Bearer ${accessToken}`,
       });
       return {
-        id: res.data.id,
-        nickname: res.data.global_name,
+        id: `${res.data.id}`,
         ...res.data.username && { username: res.data.username },
+        ...res.data.name && { name: res.data.name },
         ...res.data.email && { email: res.data.email },
-        ...res.data.avatar && { avatar: `https://cdn.discordapp.com/avatars/${res.data.id}/${res.data.avatar}.png` },
+        ...res.data.avatar_url && { avatar: res.data.avatar_url },
         raw: res.data,
       };
     } catch (e) {

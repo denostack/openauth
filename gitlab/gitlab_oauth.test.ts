@@ -1,19 +1,19 @@
 import { assertEquals, assertInstanceOf, fail } from "@std/assert";
 import { assertSpyCall, assertSpyCalls, stub } from "@std/testing/mock";
 import { FetchHttpClient, type HttpClient, HttpClientError, type OAuth, OAuthError } from "../core/mod.ts";
-import { DiscordOAuth } from "./discord_oauth.ts";
+import { GitlabOAuth } from "./gitlab_oauth.ts";
 import { beforeEach, describe, it } from "@std/testing/bdd";
 
-const CLIENT_ID = Deno.env.get("DISCORD_CLIENT_ID") ?? "1234567890";
-const CLIENT_SECRET = Deno.env.get("DISCORD_CLIENT_SECRET") ?? "1234567890abcdefghijklmnopqrstuvwxyz";
-const REDIRECT_URI = "https://openauth.denostack.com/callback/discord";
+const CLIENT_ID = Deno.env.get("GITLAB_CLIENT_ID") ?? "1234567890";
+const CLIENT_SECRET = Deno.env.get("GITLAB_CLIENT_SECRET") ?? "1234567890abcdefghijklmnopqrstuvwxyz";
+const REDIRECT_URI = "https://openauth.denostack.com/callback/gitlab";
 
-describe("DiscordOAuth", () => {
+describe("GitlabOAuth", () => {
   let httpClient: HttpClient;
   let oauth: OAuth;
   beforeEach(() => {
     httpClient = new FetchHttpClient();
-    oauth = new DiscordOAuth({
+    oauth = new GitlabOAuth({
       client: httpClient,
       clientId: CLIENT_ID,
       clientSecret: CLIENT_SECRET,
@@ -25,12 +25,12 @@ describe("DiscordOAuth", () => {
     const uri = await oauth.getAuthRequestUri({ state: "randomstring" });
     assertEquals(
       uri,
-      `https://discord.com/api/oauth2/authorize?${new URLSearchParams({
+      `https://gitlab.com/oauth/authorize?${new URLSearchParams({
         response_type: "code",
         client_id: CLIENT_ID,
         redirect_uri: REDIRECT_URI,
         state: "randomstring",
-        scope: "identify",
+        scope: "read_user",
       })}`,
     );
   });
@@ -38,16 +38,36 @@ describe("DiscordOAuth", () => {
   it("getAuthRequestUri with custom scopes", async () => {
     const uri = await oauth.getAuthRequestUri({
       state: "randomstring",
-      scope: ["identify", "email"],
+      scope: ["read_user", "api"],
     });
     assertEquals(
       uri,
-      `https://discord.com/api/oauth2/authorize?${new URLSearchParams({
+      `https://gitlab.com/oauth/authorize?${new URLSearchParams({
         response_type: "code",
         client_id: CLIENT_ID,
         redirect_uri: REDIRECT_URI,
         state: "randomstring",
-        scope: "identify email",
+        scope: "read_user api",
+      })}`,
+    );
+  });
+
+  it("getAuthRequestUri with custom host", async () => {
+    const oauth = new GitlabOAuth({
+      host: "https://gitlab.example.com",
+      client: httpClient,
+      clientId: CLIENT_ID,
+      clientSecret: CLIENT_SECRET,
+      redirectUri: REDIRECT_URI,
+    });
+    const uri = await oauth.getAuthRequestUri();
+    assertEquals(
+      uri,
+      `https://gitlab.example.com/oauth/authorize?${new URLSearchParams({
+        response_type: "code",
+        client_id: CLIENT_ID,
+        redirect_uri: REDIRECT_URI,
+        scope: "read_user",
       })}`,
     );
   });
@@ -60,9 +80,10 @@ describe("DiscordOAuth", () => {
         data: {
           access_token: "ACCESS_TOKEN",
           token_type: "Bearer",
-          expires_in: 604800,
+          expires_in: 7200,
           refresh_token: "REFRESH_TOKEN",
-          scope: "identify",
+          scope: "read_user",
+          created_at: 1775929000,
         },
       });
     });
@@ -73,14 +94,14 @@ describe("DiscordOAuth", () => {
       assertEquals(result, {
         accessToken: "ACCESS_TOKEN",
         tokenType: "Bearer",
-        expiresIn: 604800,
+        expiresIn: 7200,
         refreshToken: "REFRESH_TOKEN",
       });
       assertSpyCalls(requestStub, 1);
       assertSpyCall(requestStub, 0, {
         args: [
           "POST",
-          "https://discord.com/api/v10/oauth2/token",
+          "https://gitlab.com/oauth/token",
           {
             client_id: CLIENT_ID,
             client_secret: CLIENT_SECRET,
@@ -101,7 +122,8 @@ describe("DiscordOAuth", () => {
       return Promise.reject(
         new HttpClientError("Bad Request", 400, {
           error: "invalid_grant",
-          error_description: 'Invalid "code" in request.',
+          error_description:
+            "The provided authorization grant is invalid, expired, revoked, does not match the redirection URI used in the authorization request, or was issued to another client.",
           unknown_params: "unknown_value",
         }),
       );
@@ -114,7 +136,10 @@ describe("DiscordOAuth", () => {
     } catch (e) {
       assertInstanceOf(e, OAuthError);
       assertEquals(e.type, "invalid_grant");
-      assertEquals(e.message, 'Invalid "code" in request.');
+      assertEquals(
+        e.message,
+        "The provided authorization grant is invalid, expired, revoked, does not match the redirection URI used in the authorization request, or was issued to another client.",
+      );
       assertEquals(e.extra, { unknown_params: "unknown_value" });
     } finally {
       requestStub.restore();
@@ -127,12 +152,12 @@ describe("DiscordOAuth", () => {
         status: 200,
         headers: {},
         data: {
-          id: "123456789",
+          id: 123456,
           username: "wan2land",
-          discriminator: "0",
-          avatar: "abc123def456",
+          name: "Changwan Jun",
           email: "wan2land@gmail.com",
-          global_name: "Cris",
+          avatar_url: "https://gitlab.com/uploads/photo.png",
+          web_url: "https://gitlab.com/wan2land",
         },
       });
     });
@@ -141,23 +166,23 @@ describe("DiscordOAuth", () => {
       const accessToken = "ACCESS_TOKEN";
       const authUser = await oauth.getAuthUser(accessToken);
       assertEquals(authUser, {
-        id: "123456789",
+        id: "123456",
         username: "wan2land",
-        nickname: "Cris",
+        name: "Changwan Jun",
         email: "wan2land@gmail.com",
-        avatar: "https://cdn.discordapp.com/avatars/123456789/abc123def456.png",
+        avatar: "https://gitlab.com/uploads/photo.png",
         raw: {
-          id: "123456789",
+          id: 123456,
           username: "wan2land",
-          discriminator: "0",
-          avatar: "abc123def456",
+          name: "Changwan Jun",
           email: "wan2land@gmail.com",
-          global_name: "Cris",
+          avatar_url: "https://gitlab.com/uploads/photo.png",
+          web_url: "https://gitlab.com/wan2land",
         },
       });
       assertSpyCalls(requestStub, 1);
       assertSpyCall(requestStub, 0, {
-        args: ["GET", "https://discord.com/api/v10/users/@me", {}, { authorization: "Bearer ACCESS_TOKEN" }],
+        args: ["GET", "https://gitlab.com/api/v4/user", {}, { authorization: "Bearer ACCESS_TOKEN" }],
       });
     } finally {
       requestStub.restore();
@@ -168,20 +193,18 @@ describe("DiscordOAuth", () => {
     const requestStub = stub(httpClient, "request", () => {
       return Promise.reject(
         new HttpClientError("Unauthorized", 401, {
-          message: "401: Unauthorized",
-          code: 0,
+          message: "401 Unauthorized",
         }),
       );
     });
 
     try {
-      const accessToken = "ACCESS_TOKEN";
-      await oauth.getAuthUser(accessToken);
+      await oauth.getAuthUser("ACCESS_TOKEN");
       fail();
     } catch (e) {
       assertInstanceOf(e, OAuthError);
       assertEquals(e.type, "Unauthorized");
-      assertEquals(e.message, "401: Unauthorized");
+      assertEquals(e.message, "401 Unauthorized");
     } finally {
       requestStub.restore();
     }
