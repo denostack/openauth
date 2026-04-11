@@ -41,8 +41,6 @@ export class FetchHttpClient implements HttpClient {
     }
     const contentType = response.headers.get("content-type");
     const data = contentType?.includes("application/json") ? await response.json() : {};
-    console.log(response.status, response.statusText, data);
-
     if (response.status >= 400) {
       throw new HttpClientError(
         response.statusText,

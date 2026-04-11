@@ -1,30 +1,8 @@
-import type { HttpClient } from "./http_client.ts";
-import { FetchHttpClient } from "./fetch_http_client.ts";
-import { OAuthError } from "./oauth_error.ts";
 import type { AuthUser } from "./auth_user.ts";
-
-export interface AuthRequestUriOptions {
-  responseType?: string;
-  clientId?: string;
-  redirectUri?: string;
-  scope?: string[] | string | null;
-  state?: string;
-}
-
-export interface AccessTokenResponseOptions {
-  clientId?: string;
-  clientSecret?: string;
-  redirectUri?: string;
-  state?: string;
-}
-
-export interface AccessTokenResponse {
-  accessToken: string;
-  tokenType?: string;
-  expiresIn?: number;
-  refreshToken?: string;
-  refreshTokenExpiresIn?: number;
-}
+import { FetchHttpClient } from "./fetch_http_client.ts";
+import { type HttpClient, HttpClientError } from "./http_client.ts";
+import type { AccessTokenResponse, AccessTokenResponseOptions, AuthRequestUriOptions, OAuth } from "./oauth.ts";
+import { OAuthError } from "./oauth_error.ts";
 
 export interface OAuth2Options {
   clientId: string;
@@ -35,8 +13,10 @@ export interface OAuth2Options {
   client?: HttpClient;
 }
 
-export abstract class OAuth20 {
+export abstract class OAuth20 implements OAuth {
   httpClient: HttpClient;
+  defaultScopes: string[] = [];
+
   constructor(public options: OAuth2Options) {
     this.httpClient = options.client ?? new FetchHttpClient();
   }
@@ -55,16 +35,12 @@ export abstract class OAuth20 {
 
   abstract accessTokenRequestUri(): string;
 
-  defaultScopes(): string[] {
-    return [];
-  }
-
   buildScopes(scopes: string[]): string {
     return scopes.join(",");
   }
 
   getAuthRequestFields(options: AuthRequestUriOptions = {}): Record<string, string> {
-    const scope = ("scope" in options ? options.scope : this.options.scope) ?? this.defaultScopes();
+    const scope = ("scope" in options ? options.scope : this.options.scope) ?? this.defaultScopes;
     const scopeAsArray = Array.isArray(scope) ? scope : [scope];
     return {
       response_type: options.responseType ?? "code",
@@ -97,26 +73,39 @@ export abstract class OAuth20 {
     };
   }
 
+  createErrorFromHttpClientError(e: HttpClientError): OAuthError {
+    const { message, error: type, ...extra } = e.data as {
+      error: string;
+      message?: string;
+    };
+    return new OAuthError(message || "Error occurred", type, extra);
+  }
+
   /**
    * @see https://tools.ietf.org/html/rfc6749#section-2.3.1
    * @see https://tools.ietf.org/html/rfc6749#section-4.1.3
    */
   requestAccessToken(code: string, options: AccessTokenResponseOptions = {}): Promise<Record<string, unknown>> {
     const url = `${this.accessTokenRequestUri()}?${new URLSearchParams(this.getAccessTokenFields(code, options))}`;
-    return this.httpClient.request<Record<string, unknown>>("GET", url).then((res) => res.data);
+    return this.httpClient.request<Record<string, unknown>>("GET", url).then((res) => res.data).catch((e) => {
+      if (e instanceof HttpClientError) {
+        throw this.createErrorFromHttpClientError(e);
+      }
+      throw e;
+    });
   }
 
   /**
    * @see https://tools.ietf.org/html/rfc6749#section-4.1.4
    */
-  mapDataToAccessTokenResponse(body: Record<string, unknown>): AccessTokenResponse {
+  mapDataToAccessTokenResponse(data: Record<string, unknown>): AccessTokenResponse {
     return {
-      accessToken: body.access_token as string,
-      ...typeof body.token_type === "string" ? { tokenType: body.token_type } : {},
-      ...typeof body.expires_in === "number" ? { expiresIn: body.expires_in } : {},
-      ...typeof body.refresh_token === "string" ? { refreshToken: body.refresh_token } : {},
-      ...typeof body.refresh_token_expires_in === "number"
-        ? { refreshTokenExpiresIn: body.refresh_token_expires_in }
+      accessToken: data.access_token as string,
+      ...typeof data.token_type === "string" ? { tokenType: data.token_type } : {},
+      ...typeof data.expires_in === "number" ? { expiresIn: data.expires_in } : {},
+      ...typeof data.refresh_token === "string" ? { refreshToken: data.refresh_token } : {},
+      ...typeof data.refresh_token_expires_in === "number"
+        ? { refreshTokenExpiresIn: data.refresh_token_expires_in }
         : {},
     };
   }

@@ -1,7 +1,8 @@
-export class HttpClientError extends Error {
-  public data: Record<string, unknown>;
+// deno-lint-ignore no-explicit-any
+export class HttpClientError<T = any> extends Error {
+  public data: T;
   public status: number;
-  constructor(message: string, status: number, data: Record<string, unknown>) {
+  constructor(message: string, status: number, data: T) {
     super(message);
     this.name = "HttpClientError";
     this.status = status;
