@@ -5,8 +5,7 @@ import { KakaoOAuth } from "./kakao_oauth.ts";
 import { describe, it } from "@std/testing/bdd";
 
 const CLIENT_ID = Deno.env.get("KAKAO_CLIENT_ID") ?? "1234567890";
-const CLIENT_SECRET = Deno.env.get("KAKAO_CLIENT_SECRET") ??
-  "1234567890abcdefghijklmnopqrstuvwxyz";
+const CLIENT_SECRET = Deno.env.get("KAKAO_CLIENT_SECRET") ?? "1234567890abcdefghijklmnopqrstuvwxyz";
 const REDIRECT_URI = "https://openauth.denostack.com/callback/kakao";
 
 describe("KakaoOAuth", () => {
@@ -37,7 +36,7 @@ describe("KakaoOAuth", () => {
         status: 200,
         headers: {},
         data: {
-          access_token: "ACCESSTOKEN_1234567890",
+          access_token: "KAKAO_ACCESS_TOKEN_1234",
           token_type: "bearer",
           refresh_token: "REFRESHTOKEN_1234567890",
           expires_in: 21599,
@@ -56,13 +55,13 @@ describe("KakaoOAuth", () => {
       });
 
       const REDIRECT_CALLBACK_URL =
-        "https://openauth.denostack.com/callback/kakao?code=TOKEN_FROM_KAKAO_1234567890&state=randomstring";
+        "https://openauth.denostack.com/callback/kakao?code=KAKAO_CODE_1234&state=randomstring";
       const searchParams = Object.fromEntries(new URL(REDIRECT_CALLBACK_URL).searchParams.entries());
       const code = searchParams.code;
 
       const result = await oauth.getAccessTokenResponse(code);
       assertEquals(result, {
-        accessToken: "ACCESSTOKEN_1234567890",
+        accessToken: "KAKAO_ACCESS_TOKEN_1234",
         refreshToken: "REFRESHTOKEN_1234567890",
         tokenType: "bearer",
         expiresIn: 21599,
@@ -108,9 +107,9 @@ describe("KakaoOAuth", () => {
         redirectUri: REDIRECT_URI,
       });
 
-      const AUTHCODE = "TOKEN_FROM_KAKAO_1234567890";
+      const code = "KAKAO_CODE_1234";
       try {
-        await oauth.getAccessTokenResponse(AUTHCODE);
+        await oauth.getAccessTokenResponse(code);
         fail();
       } catch (e) {
         assertInstanceOf(e, OAuthError);
@@ -126,7 +125,7 @@ describe("KakaoOAuth", () => {
           new URL(
             `https://kauth.kakao.com/oauth/token?client_id=${CLIENT_ID}&client_secret=${CLIENT_SECRET}&redirect_uri=${
               encodeURIComponent(REDIRECT_URI)
-            }&code=${AUTHCODE}&grant_type=authorization_code`,
+            }&code=${code}&grant_type=authorization_code`,
           ),
         ],
       });
@@ -145,14 +144,14 @@ describe("KakaoOAuth", () => {
           id: 123456789,
           connected_at: "2020-08-09T13:52:19Z",
           properties: {
-            nickname: "Cris Jun",
+            nickname: "Changwan Jun",
             profile_image: "https://corgi.photos/640/640",
             thumbnail_image: "https://corgi.photos/110/110",
           },
           kakao_account: {
             profile_needs_agreement: false,
             profile: {
-              nickname: "Cris Jun",
+              nickname: "Changwan Jun",
               thumbnail_image_url: "https://corgi.photos/110/110",
               profile_image_url: "https://corgi.photos/640/640",
               is_default_image: false,
@@ -175,25 +174,25 @@ describe("KakaoOAuth", () => {
         redirectUri: REDIRECT_URI,
       });
 
-      const ACCESS_TOKEN = "ACCESSTOKEN_1234567890";
+      const ACCESS_TOKEN = "KAKAO_ACCESS_TOKEN_1234";
       const authUser = await oauth.getAuthUser(ACCESS_TOKEN);
       assertEquals(authUser, {
         avatar: "https://corgi.photos/640/640",
         id: "123456789",
         email: "wan2land@gmail.com",
-        nickname: "Cris Jun",
+        nickname: "Changwan Jun",
         raw: {
           id: 123456789,
           connected_at: "2020-08-09T13:52:19Z",
           properties: {
-            nickname: "Cris Jun",
+            nickname: "Changwan Jun",
             profile_image: "https://corgi.photos/640/640",
             thumbnail_image: "https://corgi.photos/110/110",
           },
           kakao_account: {
             profile_needs_agreement: false,
             profile: {
-              nickname: "Cris Jun",
+              nickname: "Changwan Jun",
               thumbnail_image_url: "https://corgi.photos/110/110",
               profile_image_url: "https://corgi.photos/640/640",
               is_default_image: false,

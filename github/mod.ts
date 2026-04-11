@@ -1,9 +1,2 @@
-export type {
-  AccessTokenResponse,
-  AccessTokenResponseOptions,
-  AuthRequestUriOptions,
-  AuthUser,
-  OAuth2Options,
-} from "../core/oauth20.ts";
-
-export { Github } from "./github.ts";
+export type * from "../core/mod.ts";
+export { GithubOAuth } from "./github_oauth.ts";

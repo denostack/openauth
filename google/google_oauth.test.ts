@@ -36,7 +36,7 @@ describe("GoogleOAuth", () => {
         status: 200,
         headers: {},
         data: {
-          access_token: "ACCESS_TOKEN_1234567890",
+          access_token: "GOOGLE_ACCESS_TOKEN_1234",
           expires_in: 3599,
           token_type: "Bearer",
           scope: SCOPE.join(" "),
@@ -55,13 +55,13 @@ describe("GoogleOAuth", () => {
       });
 
       const REDIRECT_CALLBACK_URL =
-        "https://openauth.denostack.com/callback/google?iss=https%3A%2F%2Faccounts.google.com&code=TOKEN_FROM_GOOGLE_1234567890&scope=email+profile+https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.profile+https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.email+openid&authuser=0&prompt=consent";
+        "https://openauth.denostack.com/callback/google?iss=https%3A%2F%2Faccounts.google.com&code=GOOGLE_CODE_1234&scope=email+profile+https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.profile+https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.email+openid&authuser=0&prompt=consent";
       const searchParams = Object.fromEntries(new URL(REDIRECT_CALLBACK_URL).searchParams.entries());
       const code = searchParams.code;
 
       const result = await oauth.getAccessTokenResponse(code);
       assertEquals(result, {
-        accessToken: "ACCESS_TOKEN_1234567890",
+        accessToken: "GOOGLE_ACCESS_TOKEN_1234",
         tokenType: "Bearer",
         expiresIn: 3599,
       });
@@ -108,9 +108,9 @@ describe("GoogleOAuth", () => {
         scope: SCOPE,
       });
 
-      const AUTHCODE = "TOKEN_FROM_GOOGLE_1234567890";
+      const code = "GOOGLE_CODE_1234";
       try {
-        await oauth.getAccessTokenResponse(AUTHCODE);
+        await oauth.getAccessTokenResponse(code);
         fail();
       } catch (e) {
         assertInstanceOf(e, OAuthError);
@@ -128,7 +128,7 @@ describe("GoogleOAuth", () => {
             client_id: CLIENT_ID,
             client_secret: CLIENT_SECRET,
             redirect_uri: REDIRECT_URI,
-            code: AUTHCODE,
+            code,
             grant_type: "authorization_code",
           },
         ],
@@ -146,8 +146,8 @@ describe("GoogleOAuth", () => {
         headers: {},
         data: {
           sub: "123456789",
-          name: "Cris Jun",
-          given_name: "Cris",
+          name: "Changwan Jun",
+          given_name: "Changwan",
           family_name: "Jun",
           picture: "https://corgi.photos/200/200",
           email: "wan2land@gmail.com",
@@ -166,17 +166,17 @@ describe("GoogleOAuth", () => {
         scope: SCOPE,
       });
 
-      const ACCESS_TOKEN = "ACCESS_TOKEN_1234567890";
+      const ACCESS_TOKEN = "GOOGLE_ACCESS_TOKEN_1234";
       const authUser = await oauth.getAuthUser(ACCESS_TOKEN);
       assertEquals(authUser, {
         id: "123456789",
         email: "wan2land@gmail.com",
-        name: "Cris Jun",
+        name: "Changwan Jun",
         avatar: "https://corgi.photos/200/200",
         raw: {
           sub: "123456789",
-          name: "Cris Jun",
-          given_name: "Cris",
+          name: "Changwan Jun",
+          given_name: "Changwan",
           family_name: "Jun",
           picture: "https://corgi.photos/200/200",
           email: "wan2land@gmail.com",

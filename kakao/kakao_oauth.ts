@@ -1,10 +1,4 @@
-import {
-  type AccessTokenResponse,
-  type AccessTokenResponseOptions,
-  type AuthUser,
-  OAuth20,
-  OAuthError,
-} from "../core/mod.ts";
+import { type AccessTokenResponseOptions, type AuthUser, OAuth20, OAuthError } from "../core/mod.ts";
 
 export interface UserRawData {
   id: number;

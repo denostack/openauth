@@ -3,10 +3,10 @@ import {
   type AccessTokenResponseOptions,
   type AuthUser,
   OAuth20,
-} from "../core/oauth20.ts";
-import { OAuthError } from "../core/oauth_error.ts";
+  OAuthError,
+} from "../core/mod.ts";
 
-export class Github extends OAuth20 {
+export class GithubOAuth extends OAuth20 {
   apiBaseUri(): string {
     return "https://api.github.com";
   }
@@ -29,9 +29,7 @@ export class Github extends OAuth20 {
   ): Record<string, string> {
     return {
       client_id: this.options.clientId,
-      ...this.options.clientSecret
-        ? { client_secret: this.options.clientSecret }
-        : {},
+      ...this.options.clientSecret ? { client_secret: this.options.clientSecret } : {},
       redirect_uri: this.options.redirectUri,
       code,
       ...options.state ? { state: options.state } : {},
@@ -63,18 +61,17 @@ export class Github extends OAuth20 {
     return this.httpClient.request<Record<string, any>>("GET", url).then(
       (res) => {
         if (res.data.error) {
-          const { error_description: message, ...errorProps } = res.data;
-          throw Object.assign(
-            new OAuthError(message || "Error occurred"),
-            errorProps,
-          );
+          const { error_description: message, error: type, ...extra } = res.data as {
+            error: string;
+            error_description: string;
+          };
+          throw new OAuthError(message || "Error occurred", type, extra);
         }
         if (res.status >= 400) {
-          const { message, ...errorProps } = res.data;
-          throw Object.assign(
-            new OAuthError(message || "Error occurred"),
-            errorProps,
-          );
+          const { message: msg, ...extra } = res.data as {
+            message: string;
+          };
+          throw new OAuthError(msg || "Error occurred", undefined, extra);
         }
         return res.data;
       },
@@ -90,11 +87,10 @@ export class Github extends OAuth20 {
       authorization: `Bearer ${accessToken}`,
     });
     if (res.status >= 400) {
-      const { message, ...errorProps } = res.data;
-      throw Object.assign(
-        new OAuthError(message || "Error occurred"),
-        errorProps,
-      );
+      const { message: msg, ...extra } = res.data as {
+        message: string;
+      };
+      throw new OAuthError(msg || "Error occurred", undefined, extra);
     }
     return {
       id: `${res.data.id}`,

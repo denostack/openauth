@@ -44,12 +44,12 @@ await oauth.getAuthUser(accessToken);
 {
   id: "123456789",
   email: "wan2land@gmail.com",
-  name: "Cris Jun",
+  name: "Changwan Jun",
   avatar: "https://corgi.photos/200/200",
   raw: {
     sub: "123456789",
-    name: "Cris Jun",
-    given_name: "Cris",
+    name: "Changwan Jun",
+    given_name: "Changwan",
     family_name: "Jun",
     picture: "https://corgi.photos/200/200",
     email: "wan2land@gmail.com",
