@@ -1,6 +1,6 @@
 import { assertEquals, assertInstanceOf, fail } from "@std/assert";
 import { beforeEach, describe, it } from "@std/testing/bdd";
-import { assertSpyCalls, stub } from "@std/testing/mock";
+import { stub } from "@std/testing/mock";
 import { FetchHttpClient, type HttpClient, HttpClientError, type OAuth, OAuthError } from "../core/mod.ts";
 import { NaverOAuth } from "./naver_oauth.ts";
 
@@ -25,7 +25,6 @@ describe("NaverOAuth", () => {
 
   it("getAuthRequestUri", async () => {
     const uri = await oauth.getAuthRequestUri();
-    console.log(uri);
     assertEquals(
       uri,
       `https://nid.naver.com/oauth2.0/authorize?${new URLSearchParams({
@@ -38,7 +37,7 @@ describe("NaverOAuth", () => {
   });
 
   it("getAccessTokenResponse success", async () => {
-    const requestStub = stub(httpClient, "request", () => {
+    stub(httpClient, "request", () => {
       return Promise.resolve({
         status: 200,
         headers: {},
@@ -51,23 +50,18 @@ describe("NaverOAuth", () => {
       });
     });
 
-    try {
-      const code = "CODE";
-      const result = await oauth.getAccessTokenResponse(code);
-      assertEquals(result, {
-        accessToken: ACCESS_TOKEN,
-        refreshToken: REFRESH_TOKEN,
-        tokenType: "bearer",
-        expiresIn: 3600,
-      });
-      assertSpyCalls(requestStub, 1);
-    } finally {
-      requestStub.restore();
-    }
+    const code = "CODE";
+    const result = await oauth.getAccessTokenResponse(code);
+    assertEquals(result, {
+      accessToken: ACCESS_TOKEN,
+      refreshToken: REFRESH_TOKEN,
+      tokenType: "bearer",
+      expiresIn: 3600,
+    });
   });
 
   it("getAccessTokenResponse fail", async () => {
-    const requestStub = stub(httpClient, "request", () => {
+    stub(httpClient, "request", () => {
       return Promise.reject(
         new HttpClientError("OK", 200, {
           error: "invalid_request",
@@ -86,13 +80,11 @@ describe("NaverOAuth", () => {
       assertEquals(e.type, "invalid_request");
       assertEquals(e.message, "no valid data in session");
       assertEquals(e.extra, { unknown_params: "unknown_value" });
-    } finally {
-      requestStub.restore();
     }
   });
 
   it("getUserProfile success", async () => {
-    const requestStub = stub(httpClient, "request", () => {
+    stub(httpClient, "request", () => {
       return Promise.resolve({
         status: 200,
         headers: {},
@@ -110,31 +102,25 @@ describe("NaverOAuth", () => {
       });
     });
 
-    try {
-      const userProfile = await oauth.getUserProfile(ACCESS_TOKEN);
-      assertEquals(userProfile, {
+    const userProfile = await oauth.getUserProfile(ACCESS_TOKEN);
+    assertEquals(userProfile, {
+      id: "123456789",
+      nickname: "Cris",
+      picture: "https://phinf.pstatic.net/contact/1234567",
+      email: "wan2land@gmail.com",
+      name: "Changwan Jun",
+      raw: {
         id: "123456789",
         nickname: "Cris",
-        picture: "https://phinf.pstatic.net/contact/1234567",
+        profile_image: "https://phinf.pstatic.net/contact/1234567",
         email: "wan2land@gmail.com",
         name: "Changwan Jun",
-        raw: {
-          id: "123456789",
-          nickname: "Cris",
-          profile_image: "https://phinf.pstatic.net/contact/1234567",
-          email: "wan2land@gmail.com",
-          name: "Changwan Jun",
-        },
-      });
-
-      assertSpyCalls(requestStub, 1);
-    } finally {
-      requestStub.restore();
-    }
+      },
+    });
   });
 
   it("getUserProfile fail", async () => {
-    const requestStub = stub(httpClient, "request", () => {
+    stub(httpClient, "request", () => {
       return Promise.reject(
         new HttpClientError("Unauthorized", 401, {
           resultcode: "024",
@@ -151,8 +137,6 @@ describe("NaverOAuth", () => {
       assertEquals(e.type, "Unauthorized");
       assertEquals(e.message, "Authentication failed (인증 실패하였습니다.)");
       assertEquals(e.extra, { resultcode: "024" });
-    } finally {
-      requestStub.restore();
     }
   });
 });

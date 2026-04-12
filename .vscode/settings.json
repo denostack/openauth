@@ -4,6 +4,8 @@
   "editor.formatOnSave": true,
   "editor.defaultFormatter": "denoland.vscode-deno",
   "cSpell.words": [
+    "changwan",
+    "kakao",
     "naver",
     "openauth"
   ]

@@ -7,7 +7,11 @@
     "./google": "./google/mod.ts",
     "./facebook": "./facebook/mod.ts",
     "./kakao": "./kakao/mod.ts",
-    "./naver": "./naver/mod.ts"
+    "./naver": "./naver/mod.ts",
+    "./line": "./line/mod.ts",
+    "./discord": "./discord/mod.ts",
+    "./apple": "./apple/mod.ts",
+    "./gitlab": "./gitlab/mod.ts"
   },
   "tasks": {
     "bench": "deno run --allow-run=deno --allow-write=.benchmark scripts/benchmark.ts",
@@ -15,8 +19,8 @@
     "test:format": "deno fmt --check",
     "test:lint": "deno lint",
     "test:unit": "deno test -A",
-    "test:types": "deno check core/mod.ts github/mod.ts google/mod.ts facebook/mod.ts kakao/mod.ts naver/mod.ts",
-    "build:npm": "deno run --allow-env --allow-read --allow-write --allow-net --allow-run scripts/build_npm.ts"
+    "test:types": "deno check core/mod.ts github/mod.ts google/mod.ts facebook/mod.ts kakao/mod.ts naver/mod.ts line/mod.ts discord/mod.ts apple/mod.ts gitlab/mod.ts",
+    "build:npm": "deno run --allow-env --allow-read --allow-write --allow-run scripts/build_npm.ts"
   },
   "imports": {
     "@deno/dnt": "jsr:@deno/dnt@^0.42.3",

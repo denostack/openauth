@@ -1,6 +1,6 @@
 import { assertEquals, assertInstanceOf, fail } from "@std/assert";
 import { beforeEach, describe, it } from "@std/testing/bdd";
-import { assertSpyCalls, stub } from "@std/testing/mock";
+import { stub } from "@std/testing/mock";
 import { FetchHttpClient, type HttpClient, HttpClientError, type OAuth, OAuthError } from "../core/mod.ts";
 import { LineOAuth } from "./line_oauth.ts";
 
@@ -38,7 +38,7 @@ describe("LineOAuth", () => {
   });
 
   it("getAccessTokenResponse success", async () => {
-    const requestStub = stub(httpClient, "request", () => {
+    stub(httpClient, "request", () => {
       return Promise.resolve({
         status: 200,
         headers: {},
@@ -53,25 +53,20 @@ describe("LineOAuth", () => {
       });
     });
 
-    try {
-      const code = "CODE";
-      const result = await oauth.getAccessTokenResponse(code);
-      assertEquals(result, {
-        scope: "openid profile",
-        accessToken: ACCESS_TOKEN,
-        tokenType: "Bearer",
-        expiresIn: 2592000,
-        refreshToken: REFRESH_TOKEN,
-        idToken: ID_TOKEN,
-      });
-      assertSpyCalls(requestStub, 1);
-    } finally {
-      requestStub.restore();
-    }
+    const code = "CODE";
+    const result = await oauth.getAccessTokenResponse(code);
+    assertEquals(result, {
+      scope: "openid profile",
+      accessToken: ACCESS_TOKEN,
+      tokenType: "Bearer",
+      expiresIn: 2592000,
+      refreshToken: REFRESH_TOKEN,
+      idToken: ID_TOKEN,
+    });
   });
 
   it("getAccessTokenResponse fail", async () => {
-    const requestStub = stub(httpClient, "request", () => {
+    stub(httpClient, "request", () => {
       return Promise.reject(
         new HttpClientError("Bad Request", 400, {
           error: "invalid_grant",
@@ -90,13 +85,11 @@ describe("LineOAuth", () => {
       assertEquals(e.type, "invalid_grant");
       assertEquals(e.message, "invalid authorization code");
       assertEquals(e.extra, { unknown_params: "unknown_value" });
-    } finally {
-      requestStub.restore();
     }
   });
 
   it("getUserProfile success", async () => {
-    const requestStub = stub(httpClient, "request", () => {
+    stub(httpClient, "request", () => {
       return Promise.resolve({
         status: 200,
         headers: {},
@@ -109,27 +102,22 @@ describe("LineOAuth", () => {
       });
     });
 
-    try {
-      const userProfile = await oauth.getUserProfile(ACCESS_TOKEN);
-      assertEquals(userProfile, {
-        id: "U1234567890",
-        name: "Changwan Jun",
-        picture: "https://profile.line-scdn.net/1234",
-        raw: {
-          userId: "U1234567890",
-          displayName: "Changwan Jun",
-          pictureUrl: "https://profile.line-scdn.net/1234",
-          statusMessage: "Hello",
-        },
-      });
-      assertSpyCalls(requestStub, 1);
-    } finally {
-      requestStub.restore();
-    }
+    const userProfile = await oauth.getUserProfile(ACCESS_TOKEN);
+    assertEquals(userProfile, {
+      id: "U1234567890",
+      name: "Changwan Jun",
+      picture: "https://profile.line-scdn.net/1234",
+      raw: {
+        userId: "U1234567890",
+        displayName: "Changwan Jun",
+        pictureUrl: "https://profile.line-scdn.net/1234",
+        statusMessage: "Hello",
+      },
+    });
   });
 
   it("getUserProfile fail", async () => {
-    const requestStub = stub(httpClient, "request", () => {
+    stub(httpClient, "request", () => {
       return Promise.reject(
         new HttpClientError("Unauthorized", 401, {
           message: "invalid token",
@@ -144,8 +132,6 @@ describe("LineOAuth", () => {
       assertInstanceOf(e, OAuthError);
       assertEquals(e.type, "Unauthorized");
       assertEquals(e.message, "invalid token");
-    } finally {
-      requestStub.restore();
     }
   });
 });

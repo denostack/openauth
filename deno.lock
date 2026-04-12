@@ -19,7 +19,8 @@
     "@std/testing@1.0.17": {
       "integrity": "87bdc2700fa98249d48a17cd72413352d3d3680dcfbdb64947fd0982d6bbf681",
       "dependencies": [
-        "jsr:@std/assert@^1.0.17"
+        "jsr:@std/assert@^1.0.17",
+        "jsr:@std/internal"
       ]
     }
   },

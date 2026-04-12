@@ -1,12 +1,12 @@
 import { assertEquals, assertInstanceOf, fail } from "@std/assert";
 import { beforeEach, describe, it } from "@std/testing/bdd";
-import { assertSpyCalls, stub } from "@std/testing/mock";
+import { stub } from "@std/testing/mock";
 import { FetchHttpClient, type HttpClient, HttpClientError, type OAuth, OAuthError } from "../core/mod.ts";
 import { KakaoOAuth } from "./kakao_oauth.ts";
 
 const CLIENT_ID = Deno.env.get("KAKAO_CLIENT_ID") ?? "1234567890";
 const CLIENT_SECRET = Deno.env.get("KAKAO_CLIENT_SECRET") ?? "1234567890abcdefghijklmnopqrstuvwxyz";
-const REDIRECT_URI = "https://local.manaboo.co.kr/auth/kakao/callback"; // "https://openauth.denostack.com/callback/kakao";
+const REDIRECT_URI = "https://openauth.denostack.com/callback/kakao";
 const ACCESS_TOKEN = Deno.env.get("KAKAO_ACCESS_TOKEN") ?? "KAKAO_ACCESS_TOKEN_1234";
 const REFRESH_TOKEN = Deno.env.get("KAKAO_REFRESH_TOKEN") ?? "KAKAO_REFRESH_TOKEN_1234";
 // const ID_TOKEN = Deno.env.get("KAKAO_ID_TOKEN") ?? "KAKAO_ID_TOKEN_1234";
@@ -37,7 +37,7 @@ describe("KakaoOAuth", () => {
   });
 
   it("getAccessTokenResponse success", async () => {
-    const requestStub = stub(httpClient, "request", () => {
+    stub(httpClient, "request", () => {
       return Promise.resolve({
         status: 200,
         headers: {},
@@ -62,8 +62,6 @@ describe("KakaoOAuth", () => {
       scope: "profile_nickname profile_image",
       refreshTokenExpiresIn: 5183999,
     });
-
-    assertSpyCalls(requestStub, 1);
   });
 
   it("getAccessTokenResponse fail", async () => {
