@@ -1,4 +1,4 @@
-import { type AccessTokenResponseOptions, type AuthUser, HttpClientError, OAuth20 } from "../core/mod.ts";
+import { OAuth20, type UserProfile } from "../core/mod.ts";
 
 export interface UserRawData {
   id: string;
@@ -9,60 +9,22 @@ export interface UserRawData {
 }
 
 export class DiscordOAuth extends OAuth20 {
-  override defaultScopes = ["identify"];
+  authRequestUri = "https://discord.com/api/oauth2/authorize";
+  accessTokenRequestUri = "https://discord.com/api/v10/oauth2/token";
+  userProfileUri = "https://discord.com/api/v10/users/@me";
 
-  apiBaseUri(): string {
-    return "https://discord.com/api/v10";
-  }
+  override scopes = ["identify"];
+  override scopeSeparator = " ";
 
-  authRequestUri(): string {
-    return "https://discord.com/api/oauth2/authorize";
-  }
-
-  accessTokenRequestUri(): string {
-    return `${this.apiBaseUri()}/oauth2/token`;
-  }
-
-  override buildScopes(scopes: string[]): string {
-    return scopes.join(" ");
-  }
-
-  override requestAccessToken(
-    code: string,
-    options: AccessTokenResponseOptions = {},
-  ): Promise<Record<string, unknown>> {
-    return this.httpClient.request<Record<string, unknown>>(
-      "POST",
-      this.accessTokenRequestUri(),
-      this.getAccessTokenFields(code, options),
-      { "content-type": "application/x-www-form-urlencoded" },
-    ).then((res) => res.data).catch((e) => {
-      if (e instanceof HttpClientError) {
-        throw this.createErrorFromHttpClientError(e);
-      }
-      throw e;
-    });
-  }
-
-  async getAuthUser(accessToken: string): Promise<AuthUser> {
-    try {
-      const url = `${this.apiBaseUri()}/users/@me`;
-      const res = await this.httpClient.request<UserRawData>("GET", url, {}, {
-        authorization: `Bearer ${accessToken}`,
-      });
-      return {
-        id: res.data.id,
-        nickname: res.data.global_name,
-        ...res.data.username && { username: res.data.username },
-        ...res.data.email && { email: res.data.email },
-        ...res.data.avatar && { avatar: `https://cdn.discordapp.com/avatars/${res.data.id}/${res.data.avatar}.png` },
-        raw: res.data,
-      };
-    } catch (e) {
-      if (e instanceof HttpClientError) {
-        throw this.createErrorFromHttpClientError(e);
-      }
-      throw e;
-    }
+  mapDataToUserProfile(data: unknown): UserProfile {
+    const raw = data as UserRawData;
+    return {
+      id: raw.id,
+      nickname: raw.global_name,
+      ...raw.username && { username: raw.username },
+      ...raw.email && { email: raw.email },
+      ...raw.avatar && { picture: `https://cdn.discordapp.com/avatars/${raw.id}/${raw.avatar}.png` },
+      raw: data,
+    };
   }
 }
