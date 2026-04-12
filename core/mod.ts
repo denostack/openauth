@@ -11,5 +11,3 @@ export type {
 export { OAuth20, type OAuth2Options } from "./oauth20.ts";
 
 export { OAuthError } from "./oauth_error.ts";
-
-export { generateCodeChallenge, generateCodeVerifier } from "./pkce.ts";

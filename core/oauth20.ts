@@ -11,9 +11,8 @@ import { OAuthError } from "./oauth_error.ts";
 
 export interface OAuth2Options {
   clientId: string;
-  clientSecret?: string;
+  clientSecret?: string | (() => Promise<string>);
   redirectUri: string;
-  code?: string;
   scope?: string[] | string;
   client?: HttpClient;
 }
@@ -57,8 +56,9 @@ export abstract class OAuth20 implements OAuth {
     return Promise.resolve(`${this.authRequestUri}?${new URLSearchParams(this.getAuthRequestFields(options))}`);
   }
 
-  getAccessTokenFields(code: string, options: AccessTokenResponseOptions = {}): Record<string, string> {
-    const clientSecret = options.clientSecret ?? this.options.clientSecret;
+  async getAccessTokenFields(code: string, options: AccessTokenResponseOptions = {}): Promise<Record<string, string>> {
+    const clientSecret = options.clientSecret ??
+      (typeof this.options.clientSecret === "function" ? await this.options.clientSecret() : this.options.clientSecret);
     return {
       client_id: options.clientId ?? this.options.clientId,
       ...clientSecret ? { client_secret: clientSecret } : {},
@@ -85,13 +85,14 @@ export abstract class OAuth20 implements OAuth {
    * @see https://tools.ietf.org/html/rfc6749#section-2.3.1
    * @see https://tools.ietf.org/html/rfc6749#section-4.1.3
    */
-  requestAccessToken(code: string, options: AccessTokenResponseOptions = {}): Promise<Record<string, unknown>> {
+  async requestAccessToken(code: string, options: AccessTokenResponseOptions = {}): Promise<Record<string, unknown>> {
     let responsePromise: Promise<HttpClientResponse<Record<string, unknown>>>;
+    const fields = await this.getAccessTokenFields(code, options);
     switch (this.requestAccessTokenMethod) {
       case "get": {
         responsePromise = this.httpClient.request<Record<string, unknown>>(
           "GET",
-          `${this.accessTokenRequestUri}?${new URLSearchParams(this.getAccessTokenFields(code, options))}`,
+          `${this.accessTokenRequestUri}?${new URLSearchParams(fields)}`,
         );
         break;
       }
@@ -100,7 +101,7 @@ export abstract class OAuth20 implements OAuth {
         responsePromise = this.httpClient.request<Record<string, unknown>>(
           "POST",
           this.accessTokenRequestUri,
-          this.getAccessTokenFields(code, options),
+          fields,
           { "content-type": "application/x-www-form-urlencoded" },
         );
       }

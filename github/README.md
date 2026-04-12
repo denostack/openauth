@@ -1,46 +1,63 @@
-# Open Auth - Github
+# @openauth/github <a href="https://github.com/denostack"><img src="https://raw.githubusercontent.com/denostack/images/main/logo.svg" width="160" align="right" /></a>
 
-<p align="left">
-  <a href="https://npmcharts.com/compare/@openauth/github?minimal=true"><img alt="Downloads" src="https://img.shields.io/npm/dt/@openauth/github.svg?style=flat-square" /></a>
-  <a href="https://www.npmjs.com/package/@openauth/github"><img alt="Version" src="https://img.shields.io/npm/v/@openauth/github.svg?style=flat-square" /></a>
-  <img alt="License" src="https://img.shields.io/npm/l/@openauth/github.svg?style=flat-square" />
-  <img alt="Typescript" src="https://img.shields.io/badge/language-Typescript-007acc.svg?style=flat-square" />
-  <a href="https://david-dm.org/wan2land/openauth?path=packages/github"><img alt="dependencies Status" src="https://img.shields.io/david/wan2land/openauth.svg?style=flat-square&path=packages/github" /></a>
-</p>
+GitHub OAuth 2.0 client.
 
-**@openauth/github** is an implementation of Github OAuth.
-
-## Installation
+## Install
 
 ```bash
-npm i @openauth/github
+# Deno
+deno add jsr:@denostack/openauth
+
+# Node.js / Bun
+npx jsr add @denostack/openauth
+# or
+npm install @openauth/github
 ```
 
 ## Usage
 
-```typescript
-import { GithubOAuth } from "@openauth/github";
+```ts
+// Deno
+import { GithubOAuth } from "@denostack/openauth/github";
 
+// Node.js / Bun
+import { GithubOAuth } from "@openauth/github";
+```
+
+```ts
 const oauth = new GithubOAuth({
-  clientId: "client_id",
-  clientSecret: "client_secret",
-  redirectUri: "https://wani.kr/auth/github/callback",
-  scope: [
-    "read:user",
-    "user:email",
-    "user:follow",
-  ],
+  clientId: "your_client_id",
+  clientSecret: "your_client_secret",
+  redirectUri: "https://example.com/callback/github",
 });
 
-// 1. After getting auth request uri, connect.
-const redirectUri = await oauth.getAuthRequestUri();
+// 1. Generate the authorization URL and redirect the user
+const url = await oauth.getAuthRequestUri({ state: "random_state" });
 
-// 2. It redirects with the code, and replaces the access token with this code value.
-const { accessToken } = await oauth.getAccessTokenResponse(code);
+// 2. Exchange the authorization code for an access token
+const token = await oauth.getAccessTokenResponse(code);
 
-// 3. Get user profile.
-await oauth.getUserProfile(accessToken);
+// 3. Fetch the user profile
+const user = await oauth.getUserProfile(token.accessToken);
+// => { id, username, name, email, picture, raw }
+```
 
-// 4. Other API
-await oauth.getClient(accessToken).get("user");
+### Custom Scopes
+
+The default scope is `user:email`. You can override it in the constructor or per request:
+
+```ts
+// Set scopes in the constructor
+const oauth = new GithubOAuth({
+  clientId: "your_client_id",
+  clientSecret: "your_client_secret",
+  redirectUri: "https://example.com/callback/github",
+  scope: ["user:email", "read:user"],
+});
+
+// Or override per request
+const url = await oauth.getAuthRequestUri({
+  state: "random_state",
+  scope: ["user:email", "read:user", "repo"],
+});
 ```

@@ -1,51 +1,63 @@
-# Open Auth - Kakao
+# @openauth/kakao <a href="https://github.com/denostack"><img src="https://raw.githubusercontent.com/denostack/images/main/logo.svg" width="160" align="right" /></a>
 
-<p align="left">
-  <a href="https://npmcharts.com/compare/@openauth/kakao?minimal=true"><img alt="Downloads" src="https://img.shields.io/npm/dt/@openauth/kakao.svg?style=flat-square" /></a>
-  <a href="https://www.npmjs.com/package/@openauth/kakao"><img alt="Version" src="https://img.shields.io/npm/v/@openauth/kakao.svg?style=flat-square" /></a>
-  <img alt="License" src="https://img.shields.io/npm/l/@openauth/kakao.svg?style=flat-square" />
-  <img alt="Typescript" src="https://img.shields.io/badge/language-Typescript-007acc.svg?style=flat-square" />
-  <a href="https://david-dm.org/wan2land/openauth?path=packages/kakao"><img alt="dependencies Status" src="https://img.shields.io/david/wan2land/openauth.svg?style=flat-square&path=packages/kakao" /></a>
-</p>
+Kakao OAuth 2.0 client.
 
-**@openauth/kakao** is an implementation of Kakao OAuth.
-
-## Installation
+## Install
 
 ```bash
-npm i @openauth/kakao
+# Deno
+deno add jsr:@denostack/openauth
+
+# Node.js / Bun
+npx jsr add @denostack/openauth
+# or
+npm install @openauth/kakao
 ```
 
 ## Usage
 
-```typescript
+```ts
+// Deno
+import { KakaoOAuth } from "@denostack/openauth/kakao";
+
+// Node.js / Bun
 import { KakaoOAuth } from "@openauth/kakao";
+```
 
+```ts
 const oauth = new KakaoOAuth({
-  clientId: "client_id",
-  clientSecret: "client_secret",
-  redirectUri: "https://wani.kr/auth/kakao/callback",
+  clientId: "your_client_id",
+  clientSecret: "your_client_secret",
+  redirectUri: "https://example.com/callback/kakao",
 });
+
+// 1. Generate the authorization URL and redirect the user
+const url = await oauth.getAuthRequestUri({ state: "random_state" });
+
+// 2. Exchange the authorization code for an access token
+const token = await oauth.getAccessTokenResponse(code);
+
+// 3. Fetch the user profile
+const user = await oauth.getUserProfile(token.accessToken);
+// => { id, nickname, picture, email, raw }
 ```
 
-OAuth login link.
+### Custom Scopes
 
-```typescript
-oauth.getAuthRequestUri(); // print https://kauth.kakao.com/oauth/authorize?...
-```
+No scopes are requested by default. You can add scopes in the constructor or per request:
 
-After logging in, you will be redirected to the `redirectUri` page with the `code` value.
+```ts
+// Set scopes in the constructor
+const oauth = new KakaoOAuth({
+  clientId: "your_client_id",
+  clientSecret: "your_client_secret",
+  redirectUri: "https://example.com/callback/kakao",
+  scope: ["profile_nickname", "account_email"],
+});
 
-```typescript
-const code = "AQAO3q3...";
-
-const response = await oauth.getAccessTokenResponse(code);
-console.log(response); // { accessToken: '...', refreshToken: '...', tokenType: 'bearer', expiresIn: 21599, refreshTokenExpiresIn: 5183999 }
-```
-
-Save `accessToken` and use it when requesting API.
-
-```typescript
-const user = await oauth.getUserProfile(response.accessToken);
-console.log(user); // { id: '3000000', email: '...', nickname: '...' }
+// Or override per request
+const url = await oauth.getAuthRequestUri({
+  state: "random_state",
+  scope: ["profile_nickname", "profile_image", "account_email"],
+});
 ```

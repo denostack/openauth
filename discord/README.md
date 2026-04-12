@@ -1,6 +1,6 @@
-# @openauth/google <a href="https://github.com/denostack"><img src="https://raw.githubusercontent.com/denostack/images/main/logo.svg" width="160" align="right" /></a>
+# @openauth/discord <a href="https://github.com/denostack"><img src="https://raw.githubusercontent.com/denostack/images/main/logo.svg" width="160" align="right" /></a>
 
-Google OAuth 2.0 client.
+Discord OAuth 2.0 client.
 
 ## Install
 
@@ -11,24 +11,24 @@ deno add jsr:@denostack/openauth
 # Node.js / Bun
 npx jsr add @denostack/openauth
 # or
-npm install @openauth/google
+npm install @openauth/discord
 ```
 
 ## Usage
 
 ```ts
 // Deno
-import { GoogleOAuth } from "@denostack/openauth/google";
+import { DiscordOAuth } from "@denostack/openauth/discord";
 
 // Node.js / Bun
-import { GoogleOAuth } from "@openauth/google";
+import { DiscordOAuth } from "@openauth/discord";
 ```
 
 ```ts
-const oauth = new GoogleOAuth({
+const oauth = new DiscordOAuth({
   clientId: "your_client_id",
   clientSecret: "your_client_secret",
-  redirectUri: "https://example.com/callback/google",
+  redirectUri: "https://example.com/callback/discord",
 });
 
 // 1. Generate the authorization URL and redirect the user
@@ -39,25 +39,25 @@ const token = await oauth.getAccessTokenResponse(code);
 
 // 3. Fetch the user profile
 const user = await oauth.getUserProfile(token.accessToken);
-// => { id, name, email, picture, raw }
+// => { id, username, name, email, picture, raw }
 ```
 
 ### Custom Scopes
 
-The default scope is `openid`. You can override it in the constructor or per request:
+The default scope is `identify`. You can override it in the constructor or per request:
 
 ```ts
 // Set scopes in the constructor
-const oauth = new GoogleOAuth({
+const oauth = new DiscordOAuth({
   clientId: "your_client_id",
   clientSecret: "your_client_secret",
-  redirectUri: "https://example.com/callback/google",
-  scope: ["openid", "email", "profile"],
+  redirectUri: "https://example.com/callback/discord",
+  scope: ["identify", "email"],
 });
 
 // Or override per request
 const url = await oauth.getAuthRequestUri({
   state: "random_state",
-  scope: ["openid", "email", "profile"],
+  scope: ["identify", "email", "guilds"],
 });
 ```

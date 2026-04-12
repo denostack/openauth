@@ -1,54 +1,64 @@
-# Open Auth - Facebook
+# @openauth/facebook <a href="https://github.com/denostack"><img src="https://raw.githubusercontent.com/denostack/images/main/logo.svg" width="160" align="right" /></a>
 
-<p align="left">
-  <a href="https://npmcharts.com/compare/@openauth/facebook?minimal=true"><img alt="Downloads" src="https://img.shields.io/npm/dt/@openauth/facebook.svg?style=flat-square" /></a>
-  <a href="https://www.npmjs.com/package/@openauth/facebook"><img alt="Version" src="https://img.shields.io/npm/v/@openauth/facebook.svg?style=flat-square" /></a>
-  <img alt="License" src="https://img.shields.io/npm/l/@openauth/facebook.svg?style=flat-square" />
-  <img alt="Typescript" src="https://img.shields.io/badge/language-Typescript-007acc.svg?style=flat-square" />
-  <a href="https://david-dm.org/wan2land/openauth?path=packages/facebook"><img alt="dependencies Status" src="https://img.shields.io/david/wan2land/openauth.svg?style=flat-square&path=packages/facebook" /></a>
-</p>
+Facebook OAuth 2.0 client.
 
-**@openauth/facebook** is an implementation of Facebook OAuth.
-
-## Installation
+## Install
 
 ```bash
-npm i @openauth/facebook
+# Deno
+deno add jsr:@denostack/openauth
+
+# Node.js / Bun
+npx jsr add @denostack/openauth
+# or
+npm install @openauth/facebook
 ```
 
 ## Usage
 
-```typescript
+```ts
+// Deno
+import { FacebookOAuth } from "@denostack/openauth/facebook";
+
+// Node.js / Bun
 import { FacebookOAuth } from "@openauth/facebook";
+```
 
+```ts
 const oauth = new FacebookOAuth({
-  clientId: "client_id",
-  clientSecret: "client_secret",
-  redirectUri: "https://wani.kr/auth/facebook/callback",
-  scope: [
-    "public_profile",
-  ],
+  clientId: "your_client_id",
+  clientSecret: "your_client_secret",
+  redirectUri: "https://example.com/callback/facebook",
+  // version: "v25.0", // optional, defaults to "v25.0"
 });
+
+// 1. Generate the authorization URL and redirect the user
+const url = await oauth.getAuthRequestUri({ state: "random_state" });
+
+// 2. Exchange the authorization code for an access token
+const token = await oauth.getAccessTokenResponse(code);
+
+// 3. Fetch the user profile
+const user = await oauth.getUserProfile(token.accessToken);
+// => { id, name, email, picture, raw }
 ```
 
-OAuth login link.
+### Custom Scopes
 
-```typescript
-oauth.getAuthRequestUri(); // print https://www.facebook.com/v7.0/dialog/oauth?response_type=code&client_id=client_id&redirect_uri=https%3A%2F%2Fwani.kr%2Fauth%2Ffacebook%2Fcallback&scope=public_profile
-```
+The default scope is `email`. You can override it in the constructor or per request:
 
-After logging in, you will be redirected to the `redirectUri` page with the `code` value.
+```ts
+// Set scopes in the constructor
+const oauth = new FacebookOAuth({
+  clientId: "your_client_id",
+  clientSecret: "your_client_secret",
+  redirectUri: "https://example.com/callback/facebook",
+  scope: ["email", "public_profile"],
+});
 
-```typescript
-const code = "AQAO3q3...";
-
-const response = await oauth.getAccessTokenResponse(code);
-console.log(response); // { accessToken: 'EAAD...', tokenType: 'bearer', expiresIn: 5165353 }
-```
-
-Save `accessToken` and use it when requesting API.
-
-```typescript
-const user = await oauth.getUserProfile(response.accessToken);
-console.log(user); // { id: '3000000', name: 'Changwan Jun' }
+// Or override per request
+const url = await oauth.getAuthRequestUri({
+  state: "random_state",
+  scope: ["email", "public_profile", "user_friends"],
+});
 ```

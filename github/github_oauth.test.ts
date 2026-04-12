@@ -23,14 +23,13 @@ describe("GithubOAuth", () => {
   });
 
   it("getAuthRequestUri", async () => {
-    const uri = await oauth.getAuthRequestUri({ state: "randomstring" });
+    const uri = await oauth.getAuthRequestUri();
     assertEquals(
       uri,
       `https://github.com/login/oauth/authorize?${new URLSearchParams({
         response_type: "code",
         client_id: CLIENT_ID,
         redirect_uri: REDIRECT_URI,
-        state: "randomstring",
         scope: "user:email",
       })}`,
     );

@@ -3,15 +3,14 @@
   "version": "0.4.2",
   "exports": {
     ".": "./core/mod.ts",
-    "./github": "./github/mod.ts",
-    "./google": "./google/mod.ts",
-    "./facebook": "./facebook/mod.ts",
-    "./kakao": "./kakao/mod.ts",
-    "./naver": "./naver/mod.ts",
-    "./line": "./line/mod.ts",
     "./discord": "./discord/mod.ts",
-    "./apple": "./apple/mod.ts",
-    "./gitlab": "./gitlab/mod.ts"
+    "./facebook": "./facebook/mod.ts",
+    "./github": "./github/mod.ts",
+    "./gitlab": "./gitlab/mod.ts",
+    "./google": "./google/mod.ts",
+    "./kakao": "./kakao/mod.ts",
+    "./line": "./line/mod.ts",
+    "./naver": "./naver/mod.ts"
   },
   "tasks": {
     "bench": "deno run --allow-run=deno --allow-write=.benchmark scripts/benchmark.ts",
@@ -19,7 +18,7 @@
     "test:format": "deno fmt --check",
     "test:lint": "deno lint",
     "test:unit": "deno test -A",
-    "test:types": "deno check core/mod.ts github/mod.ts google/mod.ts facebook/mod.ts kakao/mod.ts naver/mod.ts line/mod.ts discord/mod.ts apple/mod.ts gitlab/mod.ts",
+    "test:types": "deno check core/mod.ts github/mod.ts google/mod.ts facebook/mod.ts kakao/mod.ts naver/mod.ts line/mod.ts discord/mod.ts gitlab/mod.ts",
     "build:npm": "deno run --allow-env --allow-read --allow-write --allow-run scripts/build_npm.ts"
   },
   "imports": {
