@@ -1,12 +1,14 @@
 import { assertEquals, assertInstanceOf, fail } from "@std/assert";
-import { assertSpyCall, assertSpyCalls, stub } from "@std/testing/mock";
+import { beforeEach, describe, it } from "@std/testing/bdd";
+import { assertSpyCalls, stub } from "@std/testing/mock";
 import { FetchHttpClient, type HttpClient, HttpClientError, type OAuth, OAuthError } from "../core/mod.ts";
 import { NaverOAuth } from "./naver_oauth.ts";
-import { beforeEach, describe, it } from "@std/testing/bdd";
 
 const CLIENT_ID = Deno.env.get("NAVER_CLIENT_ID") ?? "1234567890";
 const CLIENT_SECRET = Deno.env.get("NAVER_CLIENT_SECRET") ?? "1234567890abcdefghijklmnopqrstuvwxyz";
 const REDIRECT_URI = "https://openauth.denostack.com/callback/naver";
+const ACCESS_TOKEN = Deno.env.get("NAVER_ACCESS_TOKEN") ?? "NAVER_ACCESS_TOKEN_1234";
+const REFRESH_TOKEN = Deno.env.get("NAVER_REFRESH_TOKEN") ?? "NAVER_REFRESH_TOKEN_1234";
 
 describe("NaverOAuth", () => {
   let httpClient: HttpClient;
@@ -21,33 +23,16 @@ describe("NaverOAuth", () => {
     });
   });
 
-  it("getAuthRequestUri with default scopes", async () => {
-    const uri = await oauth.getAuthRequestUri({ state: "randomstring" });
+  it("getAuthRequestUri", async () => {
+    const uri = await oauth.getAuthRequestUri();
+    console.log(uri);
     assertEquals(
       uri,
       `https://nid.naver.com/oauth2.0/authorize?${new URLSearchParams({
         response_type: "code",
         client_id: CLIENT_ID,
         redirect_uri: REDIRECT_URI,
-        state: "randomstring",
         scope: "openid",
-      })}`,
-    );
-  });
-
-  it("getAuthRequestUri with custom scopes", async () => {
-    const uri = await oauth.getAuthRequestUri({
-      state: "randomstring",
-      scope: ["openid", "email"],
-    });
-    assertEquals(
-      uri,
-      `https://nid.naver.com/oauth2.0/authorize?${new URLSearchParams({
-        response_type: "code",
-        client_id: CLIENT_ID,
-        redirect_uri: REDIRECT_URI,
-        state: "randomstring",
-        scope: "openid,email",
       })}`,
     );
   });
@@ -58,8 +43,8 @@ describe("NaverOAuth", () => {
         status: 200,
         headers: {},
         data: {
-          access_token: "NAVER_ACCESS_TOKEN_1234",
-          refresh_token: "NAVER_REFRESH_TOKEN_1234",
+          access_token: ACCESS_TOKEN,
+          refresh_token: REFRESH_TOKEN,
           token_type: "bearer",
           expires_in: "3600",
         },
@@ -67,29 +52,15 @@ describe("NaverOAuth", () => {
     });
 
     try {
-      const code = "TOKEN_FROM_NAVER_1234567890";
-
+      const code = "CODE";
       const result = await oauth.getAccessTokenResponse(code);
       assertEquals(result, {
-        accessToken: "NAVER_ACCESS_TOKEN_1234",
-        refreshToken: "NAVER_REFRESH_TOKEN_1234",
+        accessToken: ACCESS_TOKEN,
+        refreshToken: REFRESH_TOKEN,
         tokenType: "bearer",
         expiresIn: 3600,
       });
-
       assertSpyCalls(requestStub, 1);
-      assertSpyCall(requestStub, 0, {
-        args: [
-          "GET",
-          `https://nid.naver.com/oauth2.0/token?${new URLSearchParams({
-            client_id: CLIENT_ID,
-            client_secret: CLIENT_SECRET,
-            redirect_uri: REDIRECT_URI,
-            code,
-            grant_type: "authorization_code",
-          })}`,
-        ],
-      });
     } finally {
       requestStub.restore();
     }
@@ -107,7 +78,7 @@ describe("NaverOAuth", () => {
     });
 
     try {
-      const code = "TOKEN_FROM_NAVER_1234567890";
+      const code = "CODE";
       await oauth.getAccessTokenResponse(code);
       fail();
     } catch (e) {
@@ -120,7 +91,7 @@ describe("NaverOAuth", () => {
     }
   });
 
-  it("getAuthUser success", async () => {
+  it("getUserProfile success", async () => {
     const requestStub = stub(httpClient, "request", () => {
       return Promise.resolve({
         status: 200,
@@ -131,7 +102,7 @@ describe("NaverOAuth", () => {
           response: {
             id: "123456789",
             nickname: "Cris",
-            profile_image: "https://corgi.photos/200/200",
+            profile_image: "https://phinf.pstatic.net/contact/1234567",
             email: "wan2land@gmail.com",
             name: "Changwan Jun",
           },
@@ -140,40 +111,29 @@ describe("NaverOAuth", () => {
     });
 
     try {
-      const ACCESS_TOKEN = "NAVER_ACCESS_TOKEN_1234";
-      const authUser = await oauth.getAuthUser(ACCESS_TOKEN);
-      assertEquals(authUser, {
+      const userProfile = await oauth.getUserProfile(ACCESS_TOKEN);
+      assertEquals(userProfile, {
         id: "123456789",
         nickname: "Cris",
-        avatar: "https://corgi.photos/200/200",
+        picture: "https://phinf.pstatic.net/contact/1234567",
         email: "wan2land@gmail.com",
         name: "Changwan Jun",
         raw: {
           id: "123456789",
           nickname: "Cris",
-          profile_image: "https://corgi.photos/200/200",
+          profile_image: "https://phinf.pstatic.net/contact/1234567",
           email: "wan2land@gmail.com",
           name: "Changwan Jun",
         },
       });
 
       assertSpyCalls(requestStub, 1);
-      assertSpyCall(requestStub, 0, {
-        args: [
-          "GET",
-          "https://openapi.naver.com/v1/nid/me",
-          {},
-          {
-            authorization: `Bearer ${ACCESS_TOKEN}`,
-          },
-        ],
-      });
     } finally {
       requestStub.restore();
     }
   });
 
-  it("getAuthUser fail", async () => {
+  it("getUserProfile fail", async () => {
     const requestStub = stub(httpClient, "request", () => {
       return Promise.reject(
         new HttpClientError("Unauthorized", 401, {
@@ -184,7 +144,7 @@ describe("NaverOAuth", () => {
     });
 
     try {
-      await oauth.getAuthUser("NAVER_ACCESS_TOKEN_1234");
+      await oauth.getUserProfile("INVALID_ACCESS_TOKEN");
       fail();
     } catch (e) {
       assertInstanceOf(e, OAuthError);

@@ -1,8 +1,6 @@
-import { type AuthUser, HttpClientError, OAuth20, OAuthError } from "../core/mod.ts";
+import { OAuth20, type UserProfile } from "../core/mod.ts";
 
 export interface UserRawData {
-  resultcode: "00";
-  message: "success";
   response: {
     id: string;
     nickname?: string;
@@ -13,56 +11,21 @@ export interface UserRawData {
 }
 
 export class NaverOAuth extends OAuth20 {
-  override defaultScopes: string[] = ["openid"];
+  authRequestUri = "https://nid.naver.com/oauth2.0/authorize";
+  accessTokenRequestUri = "https://nid.naver.com/oauth2.0/token";
+  userProfileUri = "https://openapi.naver.com/v1/nid/me";
 
-  apiBaseUri(): string {
-    return "https://openapi.naver.com/v1";
-  }
+  override scopes: string[] = ["openid"];
+  override requestAccessTokenMethod: "get" | "x-www-form-urlencoded" = "get";
 
-  authRequestUri(): string {
-    return "https://nid.naver.com/oauth2.0/authorize";
-  }
-
-  accessTokenRequestUri(): string {
-    return "https://nid.naver.com/oauth2.0/token";
-  }
-
-  override createErrorFromHttpClientError(e: HttpClientError) {
-    if (e.status === 401) {
-      const { message, ...extra } = e.data as { message: string };
-      return new OAuthError(message, e.message, extra);
-    }
-    const { error_description: message, error: type, ...extra } = e.data as {
-      error: string;
-      error_description: string;
+  override mapDataToUserProfile(data: UserRawData): UserProfile {
+    return {
+      id: data.response.id,
+      ...(data.response.name && { name: data.response.name }),
+      ...(data.response.profile_image && { picture: data.response.profile_image }),
+      ...(data.response.nickname && { nickname: data.response.nickname }),
+      ...(data.response.email && { email: data.response.email }),
+      raw: data.response,
     };
-    return new OAuthError(message || "Error occurred", type, extra);
-  }
-
-  async getAuthUser(accessToken: string): Promise<AuthUser> {
-    try {
-      const url = `${this.apiBaseUri()}/nid/me`;
-      const res = await this.httpClient.request<UserRawData>(
-        "GET",
-        url,
-        {},
-        {
-          authorization: `Bearer ${accessToken}`,
-        },
-      );
-      return {
-        id: res.data.response.id,
-        ...(res.data.response.name && { name: res.data.response.name }),
-        ...(res.data.response.profile_image && { avatar: res.data.response.profile_image }),
-        ...(res.data.response.nickname && { nickname: res.data.response.nickname }),
-        ...(res.data.response.email && { email: res.data.response.email }),
-        raw: res.data.response,
-      };
-    } catch (e) {
-      if (e instanceof HttpClientError) {
-        throw this.createErrorFromHttpClientError(e);
-      }
-      throw e;
-    }
   }
 }

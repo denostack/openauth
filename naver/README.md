@@ -46,6 +46,6 @@ console.log(response); // { accessToken: '...', refreshToken: '...', tokenType: 
 Save `accessToken` and use it when requesting API.
 
 ```typescript
-const user = await oauth.getAuthUser(response.accessToken);
+const user = await oauth.getUserProfile(response.accessToken);
 console.log(user); // { id: '3000000', email: '...', name: '...' }
 ```

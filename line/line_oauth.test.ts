@@ -95,7 +95,7 @@ describe("LineOAuth", () => {
     }
   });
 
-  it("getAuthUser success", async () => {
+  it("getUserProfile success", async () => {
     const requestStub = stub(httpClient, "request", () => {
       return Promise.resolve({
         status: 200,
@@ -110,8 +110,8 @@ describe("LineOAuth", () => {
     });
 
     try {
-      const authUser = await oauth.getUserProfile(ACCESS_TOKEN);
-      assertEquals(authUser, {
+      const userProfile = await oauth.getUserProfile(ACCESS_TOKEN);
+      assertEquals(userProfile, {
         id: "U1234567890",
         name: "Changwan Jun",
         picture: "https://profile.line-scdn.net/1234",
@@ -128,7 +128,7 @@ describe("LineOAuth", () => {
     }
   });
 
-  it("getAuthUser fail", async () => {
+  it("getUserProfile fail", async () => {
     const requestStub = stub(httpClient, "request", () => {
       return Promise.reject(
         new HttpClientError("Unauthorized", 401, {
@@ -138,7 +138,7 @@ describe("LineOAuth", () => {
     });
 
     try {
-      await oauth.getUserProfile(ACCESS_TOKEN);
+      await oauth.getUserProfile("INVALID_ACCESS_TOKEN");
       fail();
     } catch (e) {
       assertInstanceOf(e, OAuthError);
