@@ -79,7 +79,7 @@ describe("GitlabOAuth", () => {
       tokenType: "Bearer",
       expiresIn: 7200,
       refreshToken: REFRESH_TOKEN,
-      scopes: ["read_user"],
+      scope: "read_user",
     });
   });
 

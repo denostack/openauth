@@ -1,49 +1,29 @@
-import { type AuthUser, HttpClientError, OAuth20 } from "../core/mod.ts";
+import { OAuth20, type UserProfile } from "../core/mod.ts";
 
 export interface UserRawData {
   id: number;
-  avatar_url: string;
-  name: string;
-  email: string;
+  login?: string;
+  avatar_url?: string;
+  name?: string;
+  email?: string;
 }
 
 export class GithubOAuth extends OAuth20 {
-  override defaultScopes: string[] = ["user:email"];
+  authRequestUri = "https://github.com/login/oauth/authorize";
+  accessTokenRequestUri = "https://github.com/login/oauth/access_token";
+  userProfileUri = "https://api.github.com/user";
 
-  apiBaseUri(): string {
-    return "https://api.github.com";
-  }
+  override scopes = ["user:email"];
+  override scopeSeparator = " ";
 
-  authRequestUri(): string {
-    return "https://github.com/login/oauth/authorize";
-  }
-
-  accessTokenRequestUri(): string {
-    return "https://github.com/login/oauth/access_token";
-  }
-
-  override buildScopes(scopes: string[]): string {
-    return scopes.join(" ");
-  }
-
-  async getAuthUser(accessToken: string): Promise<AuthUser> {
-    try {
-      const url = `${this.apiBaseUri()}/user`;
-      const res = await this.httpClient.request<UserRawData>("GET", url, {}, {
-        authorization: `Bearer ${accessToken}`,
-      });
-      return {
-        id: `${res.data.id}`,
-        name: res.data.name,
-        email: res.data.email,
-        avatar: res.data.avatar_url,
-        raw: res.data,
-      };
-    } catch (e) {
-      if (e instanceof HttpClientError) {
-        throw this.createErrorFromHttpClientError(e);
-      }
-      throw e;
-    }
+  mapDataToUserProfile(data: UserRawData): UserProfile {
+    return {
+      id: `${data.id}`,
+      ...data.login && { username: data.login },
+      ...data.name && { name: data.name },
+      ...data.email && { email: data.email },
+      ...data.avatar_url && { picture: data.avatar_url },
+      raw: data,
+    };
   }
 }
