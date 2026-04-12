@@ -11,7 +11,7 @@ Deno.test("fetch_http_client get", async () => {
     assertStrictEquals((options as RequestInit)?.method, "GET");
     return Promise.resolve({
       status: 200,
-      headers: new Headers({ "X-Test": "test" }),
+      headers: new Headers({ "X-Test": "test", "Content-Type": "application/json" }),
       json: () => Promise.resolve({ success: true }),
     } as Response);
   });
@@ -19,6 +19,7 @@ Deno.test("fetch_http_client get", async () => {
   assertEquals(await client.request("GET", "https://test.local"), {
     status: 200,
     headers: {
+      "content-type": "application/json",
       "x-test": "test",
     },
     data: {
