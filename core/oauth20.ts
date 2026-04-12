@@ -1,7 +1,12 @@
-import type { AuthUser } from "./auth_user.ts";
 import { FetchHttpClient } from "./fetch_http_client.ts";
 import { type HttpClient, HttpClientError } from "./http_client.ts";
-import type { AccessTokenResponse, AccessTokenResponseOptions, AuthRequestUriOptions, OAuth } from "./oauth.ts";
+import type {
+  AccessTokenResponse,
+  AccessTokenResponseOptions,
+  AuthRequestUriOptions,
+  OAuth,
+  UserProfile,
+} from "./oauth.ts";
 import { OAuthError } from "./oauth_error.ts";
 
 export interface OAuth2Options {
@@ -15,28 +20,22 @@ export interface OAuth2Options {
 
 export abstract class OAuth20 implements OAuth {
   httpClient: HttpClient;
+
+  abstract authRequestUri: string;
+  abstract accessTokenRequestUri: string;
+  abstract userProfileUri: string;
+
+  requestAccessTokenMethod: "get" | "application/x-www-form-urlencoded" = "application/x-www-form-urlencoded";
+
   defaultScopes: string[] = [];
+  scopeSeparator: string = ",";
 
   constructor(public options: OAuth2Options) {
     this.httpClient = options.client ?? new FetchHttpClient();
   }
 
-  abstract getAuthUser(accessToken: string): Promise<AuthUser>;
-
-  /**
-   * start with https:// or http://
-   */
-  abstract apiBaseUri(): string;
-
-  /**
-   * start with https:// or http://
-   */
-  abstract authRequestUri(): string;
-
-  abstract accessTokenRequestUri(): string;
-
   buildScopes(scopes: string[]): string {
-    return scopes.join(",");
+    return scopes.join(this.scopeSeparator);
   }
 
   getAuthRequestFields(options: AuthRequestUriOptions = {}): Record<string, string> {
@@ -55,7 +54,7 @@ export abstract class OAuth20 implements OAuth {
    * @see https://tools.ietf.org/html/rfc6749#section-4.1.1
    */
   getAuthRequestUri(options: AuthRequestUriOptions = {}): Promise<string> {
-    return Promise.resolve(`${this.authRequestUri()}?${new URLSearchParams(this.getAuthRequestFields(options))}`);
+    return Promise.resolve(`${this.authRequestUri}?${new URLSearchParams(this.getAuthRequestFields(options))}`);
   }
 
   getAccessTokenFields(code: string, options: AccessTokenResponseOptions = {}): Record<string, string> {
@@ -87,13 +86,37 @@ export abstract class OAuth20 implements OAuth {
    * @see https://tools.ietf.org/html/rfc6749#section-4.1.3
    */
   requestAccessToken(code: string, options: AccessTokenResponseOptions = {}): Promise<Record<string, unknown>> {
-    const url = `${this.accessTokenRequestUri()}?${new URLSearchParams(this.getAccessTokenFields(code, options))}`;
-    return this.httpClient.request<Record<string, unknown>>("GET", url).then((res) => res.data).catch((e) => {
-      if (e instanceof HttpClientError) {
-        throw this.createErrorFromHttpClientError(e);
+    switch (this.requestAccessTokenMethod) {
+      case "get": {
+        return this.httpClient.request<Record<string, unknown>>(
+          "GET",
+          `${this.accessTokenRequestUri}?${new URLSearchParams(this.getAccessTokenFields(code, options))}`,
+        )
+          .then((res) => res.data)
+          .catch((e) => {
+            if (e instanceof HttpClientError) {
+              throw this.createErrorFromHttpClientError(e);
+            }
+            throw e;
+          });
       }
-      throw e;
-    });
+      case "application/x-www-form-urlencoded":
+      default: {
+        return this.httpClient.request<Record<string, unknown>>(
+          "POST",
+          this.accessTokenRequestUri,
+          this.getAccessTokenFields(code, options),
+          { "content-type": "application/x-www-form-urlencoded" },
+        )
+          .then((res) => res.data)
+          .catch((e) => {
+            if (e instanceof HttpClientError) {
+              throw this.createErrorFromHttpClientError(e);
+            }
+            throw e;
+          });
+      }
+    }
   }
 
   /**
@@ -102,12 +125,14 @@ export abstract class OAuth20 implements OAuth {
   mapDataToAccessTokenResponse(data: Record<string, unknown>): AccessTokenResponse {
     return {
       accessToken: data.access_token as string,
+      ...typeof data.scope === "string" && { scope: data.scope },
       ...typeof data.token_type === "string" && { tokenType: data.token_type },
       ...typeof data.expires_in === "number" && { expiresIn: data.expires_in },
       ...typeof data.expires_in === "string" && { expiresIn: +data.expires_in },
       ...typeof data.refresh_token === "string" && { refreshToken: data.refresh_token },
       ...typeof data.refresh_token_expires_in === "number" &&
         { refreshTokenExpiresIn: data.refresh_token_expires_in },
+      ...typeof data.id_token === "string" && { idToken: data.id_token },
     };
   }
 
@@ -121,5 +146,20 @@ export abstract class OAuth20 implements OAuth {
         options,
       ),
     );
+  }
+
+  abstract mapDataToUserProfile(data: unknown): UserProfile;
+
+  getUserProfile(accessToken: string): Promise<UserProfile> {
+    return this.httpClient.request<unknown>("GET", this.userProfileUri, {}, {
+      authorization: `Bearer ${accessToken}`,
+    })
+      .then((res) => this.mapDataToUserProfile(res.data))
+      .catch((e) => {
+        if (e instanceof HttpClientError) {
+          throw this.createErrorFromHttpClientError(e);
+        }
+        throw e;
+      });
   }
 }
