@@ -11,13 +11,13 @@ export interface FacebookOAuthOptions extends OAuth2Options {
 }
 
 export class FacebookOAuth extends OAuth20 {
-  get authRequestUri() {
+  get authRequestUri(): string {
     return `https://www.facebook.com/${this.version}/dialog/oauth`;
   }
   get accessTokenRequestUri(): string {
     return `https://graph.facebook.com/${this.version}/oauth/access_token`;
   }
-  get userProfileUri() {
+  get userProfileUri(): string {
     return `https://graph.facebook.com/${this.version}/me?${new URLSearchParams({ fields: "id,email,name" })}`;
   }
 
@@ -31,7 +31,7 @@ export class FacebookOAuth extends OAuth20 {
     this.version = options.version ?? "v25.0";
   }
 
-  override createErrorFromHttpClientError(e: HttpClientError) {
+  override createErrorFromHttpClientError(e: HttpClientError): OAuthError {
     if ("error" in e.data) {
       const { error: { message, type, ...extra } = {} } = e.data as {
         error?: {

@@ -9,7 +9,6 @@ const CLIENT_SECRET = Deno.env.get("DISCORD_CLIENT_SECRET") ?? "1234567890abcdef
 const REDIRECT_URI = "https://openauth.denostack.com/callback/discord";
 const ACCESS_TOKEN = Deno.env.get("DISCORD_ACCESS_TOKEN") ?? "DISCORD_ACCESS_TOKEN_1234";
 const REFRESH_TOKEN = Deno.env.get("DISCORD_REFRESH_TOKEN") ?? "DISCORD_REFRESH_TOKEN_1234";
-const ID_TOKEN = Deno.env.get("DISCORD_ID_TOKEN") ?? "DISCORD_ID_TOKEN_1234";
 
 describe("DiscordOAuth", () => {
   let httpClient: HttpClient;

@@ -13,13 +13,13 @@ export interface GitlabOAuthOptions extends OAuth2Options {
 }
 
 export class GitlabOAuth extends OAuth20 {
-  get authRequestUri() {
+  get authRequestUri(): string {
     return `${this.host}/oauth/authorize`;
   }
-  get accessTokenRequestUri() {
+  get accessTokenRequestUri(): string {
     return `${this.host}/oauth/token`;
   }
-  get userProfileUri() {
+  get userProfileUri(): string {
     return `${this.host}/api/v4/user`;
   }
 

@@ -8,7 +8,6 @@ const CLIENT_ID = Deno.env.get("FACEBOOK_CLIENT_ID") ?? "1234567890";
 const CLIENT_SECRET = Deno.env.get("FACEBOOK_CLIENT_SECRET") ?? "1234567890abcdefghijklmnopqrstuvwxyz";
 const REDIRECT_URI = "https://openauth.denostack.com/callback/facebook";
 const ACCESS_TOKEN = Deno.env.get("FACEBOOK_ACCESS_TOKEN") ?? "FACEBOOK_ACCESS_TOKEN_1234";
-const ID_TOKEN = Deno.env.get("FACEBOOK_ID_TOKEN") ?? "FACEBOOK_ID_TOKEN_1234";
 
 describe("FacebookOAuth", () => {
   let httpClient: HttpClient;
