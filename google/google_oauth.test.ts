@@ -23,7 +23,7 @@ describe("GoogleOAuth", () => {
     });
   });
 
-  it("getAuthRequestUri with default scopes", async () => {
+  it("getAuthRequestUri", async () => {
     const uri = await oauth.getAuthRequestUri();
     assertEquals(
       uri,
