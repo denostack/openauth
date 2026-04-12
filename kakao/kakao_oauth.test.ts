@@ -1,224 +1,157 @@
 import { assertEquals, assertInstanceOf, fail } from "@std/assert";
-import { assertSpyCall, assertSpyCalls, stub } from "@std/testing/mock";
-import { FetchHttpClient, OAuthError } from "../core/mod.ts";
+import { beforeEach, describe, it } from "@std/testing/bdd";
+import { assertSpyCalls, stub } from "@std/testing/mock";
+import { FetchHttpClient, type HttpClient, HttpClientError, type OAuth, OAuthError } from "../core/mod.ts";
 import { KakaoOAuth } from "./kakao_oauth.ts";
-import { describe, it } from "@std/testing/bdd";
 
 const CLIENT_ID = Deno.env.get("KAKAO_CLIENT_ID") ?? "1234567890";
 const CLIENT_SECRET = Deno.env.get("KAKAO_CLIENT_SECRET") ?? "1234567890abcdefghijklmnopqrstuvwxyz";
-const REDIRECT_URI = "https://openauth.denostack.com/callback/kakao";
+const REDIRECT_URI = "https://local.manaboo.co.kr/auth/kakao/callback"; // "https://openauth.denostack.com/callback/kakao";
+const ACCESS_TOKEN = Deno.env.get("KAKAO_ACCESS_TOKEN") ?? "KAKAO_ACCESS_TOKEN_1234";
+const REFRESH_TOKEN = Deno.env.get("KAKAO_REFRESH_TOKEN") ?? "KAKAO_REFRESH_TOKEN_1234";
+// const ID_TOKEN = Deno.env.get("KAKAO_ID_TOKEN") ?? "KAKAO_ID_TOKEN_1234";
 
 describe("KakaoOAuth", () => {
-  it("getAuthRequestUri", async () => {
-    const httpClient = new FetchHttpClient();
-    const oauth = new KakaoOAuth({
+  let httpClient: HttpClient;
+  let oauth: OAuth;
+  beforeEach(() => {
+    httpClient = new FetchHttpClient();
+    oauth = new KakaoOAuth({
       client: httpClient,
       clientId: CLIENT_ID,
       clientSecret: CLIENT_SECRET,
       redirectUri: REDIRECT_URI,
     });
+  });
 
-    const state = "randomstring";
-    const uri = await oauth.getAuthRequestUri({ state });
-
+  it("getAuthRequestUri", async () => {
+    const uri = await oauth.getAuthRequestUri({});
     assertEquals(
       uri,
-      `https://kauth.kakao.com/oauth/authorize?response_type=code&client_id=${CLIENT_ID}&redirect_uri=${
-        encodeURIComponent(REDIRECT_URI)
-      }&state=${state}`,
+      `https://kauth.kakao.com/oauth/authorize?${new URLSearchParams({
+        response_type: "code",
+        client_id: CLIENT_ID,
+        redirect_uri: REDIRECT_URI,
+      })}`,
     );
   });
 
   it("getAccessTokenResponse success", async () => {
-    const httpClient = new FetchHttpClient();
     const requestStub = stub(httpClient, "request", () => {
       return Promise.resolve({
         status: 200,
         headers: {},
         data: {
-          access_token: "KAKAO_ACCESS_TOKEN_1234",
+          access_token: ACCESS_TOKEN,
           token_type: "bearer",
-          refresh_token: "REFRESHTOKEN_1234567890",
+          refresh_token: REFRESH_TOKEN,
           expires_in: 21599,
-          scope: "age_range birthday account_email gender profile", // optional
+          scope: "profile_nickname profile_image", // optional
           refresh_token_expires_in: 5183999,
         },
       });
     });
 
-    try {
-      const oauth = new KakaoOAuth({
-        client: httpClient,
-        clientId: CLIENT_ID,
-        clientSecret: CLIENT_SECRET,
-        redirectUri: REDIRECT_URI,
-      });
+    const code = "ptYIH6NZpc4mpR-cpQgT5lYWztvLBzIyd8-NHW-iH7Wr0drYV0IK7AAAAAQKDQgeAAABnX-1nJt-jFVpBnvzXw"; // "CODE";
+    const result = await oauth.getAccessTokenResponse(code);
+    assertEquals(result, {
+      accessToken: ACCESS_TOKEN,
+      refreshToken: REFRESH_TOKEN,
+      tokenType: "bearer",
+      expiresIn: 21599,
+      scopes: ["profile_nickname", "profile_image"],
+      refreshTokenExpiresIn: 5183999,
+    });
 
-      const REDIRECT_CALLBACK_URL =
-        "https://openauth.denostack.com/callback/kakao?code=KAKAO_CODE_1234&state=randomstring";
-      const searchParams = Object.fromEntries(new URL(REDIRECT_CALLBACK_URL).searchParams.entries());
-      const code = searchParams.code;
-
-      const result = await oauth.getAccessTokenResponse(code);
-      assertEquals(result, {
-        accessToken: "KAKAO_ACCESS_TOKEN_1234",
-        refreshToken: "REFRESHTOKEN_1234567890",
-        tokenType: "bearer",
-        expiresIn: 21599,
-        refreshTokenExpiresIn: 5183999,
-      });
-
-      assertSpyCalls(requestStub, 1);
-      assertSpyCall(requestStub, 0, {
-        args: [
-          "GET",
-          new URL(
-            `https://kauth.kakao.com/oauth/token?client_id=${CLIENT_ID}&client_secret=${CLIENT_SECRET}&redirect_uri=${
-              encodeURIComponent(REDIRECT_URI)
-            }&code=${code}&grant_type=authorization_code`,
-          ),
-        ],
-      });
-    } finally {
-      requestStub.restore();
-    }
+    assertSpyCalls(requestStub, 1);
   });
 
   it("getAccessTokenResponse fail", async () => {
-    const httpClient = new FetchHttpClient();
-    const requestStub = stub(httpClient, "request", () => {
-      return Promise.resolve({
-        status: 400,
-        headers: {},
-        data: {
+    stub(httpClient, "request", () => {
+      return Promise.reject(
+        new HttpClientError("Bad Request", 400, {
           error: "invalid_grant",
-          error_description: "authorization code not found.",
+          error_description: "authorization code not found for code=CODE",
           error_code: "KOE320",
-          unknown_params: "unknown_value",
-        },
-      });
+        }),
+      );
     });
 
     try {
-      const oauth = new KakaoOAuth({
-        client: httpClient,
-        clientId: CLIENT_ID,
-        clientSecret: CLIENT_SECRET,
-        redirectUri: REDIRECT_URI,
-      });
-
-      const code = "KAKAO_CODE_1234";
-      try {
-        await oauth.getAccessTokenResponse(code);
-        fail();
-      } catch (e) {
-        assertInstanceOf(e, OAuthError);
-        assertEquals(e.type, "invalid_grant");
-        assertEquals(e.message, "authorization code not found.");
-        assertEquals(e.extra, { error_code: "KOE320", unknown_params: "unknown_value" });
-      }
-
-      assertSpyCalls(requestStub, 1);
-      assertSpyCall(requestStub, 0, {
-        args: [
-          "GET",
-          new URL(
-            `https://kauth.kakao.com/oauth/token?client_id=${CLIENT_ID}&client_secret=${CLIENT_SECRET}&redirect_uri=${
-              encodeURIComponent(REDIRECT_URI)
-            }&code=${code}&grant_type=authorization_code`,
-          ),
-        ],
-      });
-    } finally {
-      requestStub.restore();
+      const code = "CODE";
+      await oauth.getAccessTokenResponse(code);
+      fail();
+    } catch (e) {
+      assertInstanceOf(e, OAuthError);
+      assertEquals(e.type, "invalid_grant");
+      assertEquals(e.message, "authorization code not found for code=CODE");
+      assertEquals(e.extra, { error_code: "KOE320" });
     }
   });
 
-  it("getAuthUser", async () => {
-    const httpClient = new FetchHttpClient();
-    const requestStub = stub(httpClient, "request", () => {
+  it("getUserProfile success", async () => {
+    stub(httpClient, "request", () => {
       return Promise.resolve({
         status: 200,
         headers: {},
         data: {
           id: 123456789,
-          connected_at: "2020-08-09T13:52:19Z",
           properties: {
             nickname: "Changwan Jun",
-            profile_image: "https://corgi.photos/640/640",
-            thumbnail_image: "https://corgi.photos/110/110",
+            profile_image: "http://k.kakaocdn.net/dn/1234",
           },
           kakao_account: {
-            profile_needs_agreement: false,
             profile: {
               nickname: "Changwan Jun",
-              thumbnail_image_url: "https://corgi.photos/110/110",
-              profile_image_url: "https://corgi.photos/640/640",
-              is_default_image: false,
+              profile_image_url: "http://k.kakaocdn.net/dn/1234",
             },
-            has_email: true,
-            email_needs_agreement: false,
-            is_email_valid: true,
-            is_email_verified: true,
             email: "wan2land@gmail.com",
           },
         },
       });
     });
 
-    try {
-      const oauth = new KakaoOAuth({
-        client: httpClient,
-        clientId: CLIENT_ID,
-        clientSecret: CLIENT_SECRET,
-        redirectUri: REDIRECT_URI,
-      });
-
-      const ACCESS_TOKEN = "KAKAO_ACCESS_TOKEN_1234";
-      const authUser = await oauth.getAuthUser(ACCESS_TOKEN);
-      assertEquals(authUser, {
-        avatar: "https://corgi.photos/640/640",
-        id: "123456789",
-        email: "wan2land@gmail.com",
-        nickname: "Changwan Jun",
-        raw: {
-          id: 123456789,
-          connected_at: "2020-08-09T13:52:19Z",
-          properties: {
-            nickname: "Changwan Jun",
-            profile_image: "https://corgi.photos/640/640",
-            thumbnail_image: "https://corgi.photos/110/110",
-          },
-          kakao_account: {
-            profile_needs_agreement: false,
-            profile: {
-              nickname: "Changwan Jun",
-              thumbnail_image_url: "https://corgi.photos/110/110",
-              profile_image_url: "https://corgi.photos/640/640",
-              is_default_image: false,
-            },
-            has_email: true,
-            email_needs_agreement: false,
-            is_email_valid: true,
-            is_email_verified: true,
-            email: "wan2land@gmail.com",
-          },
+    const userProfile = await oauth.getUserProfile(ACCESS_TOKEN);
+    assertEquals(userProfile, {
+      picture: "http://k.kakaocdn.net/dn/1234",
+      id: "123456789",
+      email: "wan2land@gmail.com",
+      nickname: "Changwan Jun",
+      raw: {
+        id: 123456789,
+        properties: {
+          nickname: "Changwan Jun",
+          profile_image: "http://k.kakaocdn.net/dn/1234",
         },
-      });
-
-      assertSpyCalls(requestStub, 1);
-      assertSpyCall(requestStub, 0, {
-        args: [
-          "GET",
-          "https://kapi.kakao.com/v2/user/me",
-          {},
-          {
-            authorization: `Bearer ${ACCESS_TOKEN}`,
+        kakao_account: {
+          profile: {
+            nickname: "Changwan Jun",
+            profile_image_url: "http://k.kakaocdn.net/dn/1234",
           },
-        ],
-      });
-    } finally {
-      requestStub.restore();
+          email: "wan2land@gmail.com",
+        },
+      },
+    });
+  });
+
+  it("getUserProfile fail", async () => {
+    stub(httpClient, "request", () => {
+      return Promise.reject(
+        new HttpClientError("Unauthorized", 401, {
+          msg: "this access token does not exist",
+          code: -401,
+        }),
+      );
+    });
+
+    try {
+      await oauth.getUserProfile("INVALID_ACCESS_TOKEN");
+      fail();
+    } catch (e) {
+      assertInstanceOf(e, OAuthError);
+      assertEquals(e.type, "Unauthorized");
+      assertEquals(e.message, "this access token does not exist");
+      assertEquals(e.extra, { code: -401 });
     }
   });
 });

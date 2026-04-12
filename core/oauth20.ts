@@ -125,7 +125,7 @@ export abstract class OAuth20 implements OAuth {
   mapDataToAccessTokenResponse(data: Record<string, unknown>): AccessTokenResponse {
     return {
       accessToken: data.access_token as string,
-      ...typeof data.scope === "string" && { scopes: data.scope.split(this.scopeSeparator).filter((t) => t.trim()) },
+      ...typeof data.scope === "string" && { scopes: data.scope.split(" ").filter((t) => t.trim()) },
       ...typeof data.token_type === "string" && { tokenType: data.token_type },
       ...typeof data.expires_in === "number" && { expiresIn: data.expires_in },
       ...typeof data.expires_in === "string" && { expiresIn: +data.expires_in },
