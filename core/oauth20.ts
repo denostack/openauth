@@ -1,5 +1,5 @@
 import { FetchHttpClient } from "./fetch_http_client.ts";
-import { type HttpClient, HttpClientError } from "./http_client.ts";
+import { type HttpClient, HttpClientError, type HttpClientResponse } from "./http_client.ts";
 import type {
   AccessTokenResponse,
   AccessTokenResponseOptions,
@@ -86,37 +86,32 @@ export abstract class OAuth20 implements OAuth {
    * @see https://tools.ietf.org/html/rfc6749#section-4.1.3
    */
   requestAccessToken(code: string, options: AccessTokenResponseOptions = {}): Promise<Record<string, unknown>> {
+    let responsePromise: Promise<HttpClientResponse<Record<string, unknown>>>;
     switch (this.requestAccessTokenMethod) {
       case "get": {
-        return this.httpClient.request<Record<string, unknown>>(
+        responsePromise = this.httpClient.request<Record<string, unknown>>(
           "GET",
           `${this.accessTokenRequestUri}?${new URLSearchParams(this.getAccessTokenFields(code, options))}`,
-        )
-          .then((res) => res.data)
-          .catch((e) => {
-            if (e instanceof HttpClientError) {
-              throw this.createErrorFromHttpClientError(e);
-            }
-            throw e;
-          });
+        );
+        break;
       }
       case "x-www-form-urlencoded":
       default: {
-        return this.httpClient.request<Record<string, unknown>>(
+        responsePromise = this.httpClient.request<Record<string, unknown>>(
           "POST",
           this.accessTokenRequestUri,
           this.getAccessTokenFields(code, options),
           { "content-type": "application/x-www-form-urlencoded" },
-        )
-          .then((res) => res.data)
-          .catch((e) => {
-            if (e instanceof HttpClientError) {
-              throw this.createErrorFromHttpClientError(e);
-            }
-            throw e;
-          });
+        );
       }
     }
+    return responsePromise.then((res) => res.data)
+      .catch((e) => {
+        if (e instanceof HttpClientError) {
+          throw this.createErrorFromHttpClientError(e);
+        }
+        throw e;
+      });
   }
 
   /**

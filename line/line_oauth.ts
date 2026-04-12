@@ -13,7 +13,7 @@ export class LineOAuth extends OAuth20 {
   userProfileUri = "https://api.line.me/v2/profile";
 
   override scopes = ["openid", "profile"];
-  override scopeSeparator: string = " ";
+  override scopeSeparator = " ";
 
   mapDataToUserProfile(data: UserRawData): UserProfile {
     return {

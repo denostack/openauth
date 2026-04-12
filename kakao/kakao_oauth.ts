@@ -16,14 +16,14 @@ export interface UserRawData {
 }
 
 export class KakaoOAuth extends OAuth20 {
-  authRequestUri: string = "https://kauth.kakao.com/oauth/authorize";
-  accessTokenRequestUri: string = "https://kauth.kakao.com/oauth/token";
-  userProfileUri: string = "https://kapi.kakao.com/v2/user/me";
+  authRequestUri = "https://kauth.kakao.com/oauth/authorize";
+  accessTokenRequestUri = "https://kauth.kakao.com/oauth/token";
+  userProfileUri = "https://kapi.kakao.com/v2/user/me";
 
   override scopes = [];
-  override scopeSeparator: string = ",";
+  override scopeSeparator = ",";
 
-  override requestAccessTokenMethod: "get" | "x-www-form-urlencoded" = "get";
+  override requestAccessTokenMethod = "get" as const;
 
   override createErrorFromHttpClientError(e: HttpClientError): OAuthError {
     if ("msg" in e.data) {

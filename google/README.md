@@ -39,7 +39,7 @@ const redirectUri = await oauth.getAuthRequestUri();
 const { accessToken } = await oauth.getAccessTokenResponse(code);
 
 // 3. Get user profile.
-await oauth.getAuthUser(accessToken);
+await oauth.getUserProfile(accessToken);
 /*
 {
   id: "123456789",

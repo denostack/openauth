@@ -11,7 +11,7 @@ class CustomOAuth20 extends OAuth20 {
   userProfileUri = "https://openauth.denostack.com/oauth2/userinfo";
 
   override scopes = ["userinfo"];
-  override scopeSeparator: string = "|";
+  override scopeSeparator = "|";
 
   mapDataToUserProfile(data: Record<string, unknown>): UserProfile {
     return {
