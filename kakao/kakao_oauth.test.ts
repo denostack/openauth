@@ -59,7 +59,7 @@ describe("KakaoOAuth", () => {
       refreshToken: REFRESH_TOKEN,
       tokenType: "bearer",
       expiresIn: 21599,
-      scopes: ["profile_nickname", "profile_image"],
+      scope: "profile_nickname profile_image",
       refreshTokenExpiresIn: 5183999,
     });
 

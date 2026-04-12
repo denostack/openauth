@@ -57,7 +57,7 @@ describe("LineOAuth", () => {
       const code = "CODE";
       const result = await oauth.getAccessTokenResponse(code);
       assertEquals(result, {
-        scopes: ["openid", "profile"],
+        scope: "openid profile",
         accessToken: ACCESS_TOKEN,
         tokenType: "Bearer",
         expiresIn: 2592000,

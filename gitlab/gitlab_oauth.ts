@@ -13,19 +13,24 @@ export interface GitlabOAuthOptions extends OAuth2Options {
 }
 
 export class GitlabOAuth extends OAuth20 {
-  authRequestUri: string;
-  accessTokenRequestUri: string;
-  userProfileUri: string;
+  get authRequestUri() {
+    return `${this.host}/oauth/authorize`;
+  }
+  get accessTokenRequestUri() {
+    return `${this.host}/oauth/token`;
+  }
+  get userProfileUri() {
+    return `${this.host}/api/v4/user`;
+  }
+
+  host: string;
 
   override scopes = ["read_user"];
   override scopeSeparator = " ";
 
   constructor(options: GitlabOAuthOptions) {
     super(options);
-    const host = (options.host ?? "https://gitlab.com").replace(/\/+$/, "");
-    this.authRequestUri = `${host}/oauth/authorize`;
-    this.accessTokenRequestUri = `${host}/oauth/token`;
-    this.userProfileUri = `${host}/api/v4/user`;
+    this.host = (options.host ?? "https://gitlab.com").replace(/\/+$/, "");
   }
 
   mapDataToUserProfile(data: UserRawData): UserProfile {

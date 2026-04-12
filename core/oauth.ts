@@ -15,7 +15,7 @@ export interface AccessTokenResponseOptions {
 
 export interface AccessTokenResponse {
   accessToken: string;
-  scopes?: string[];
+  scope?: string;
   tokenType?: string;
   expiresIn?: number;
   refreshToken?: string;

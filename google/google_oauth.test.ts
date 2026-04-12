@@ -57,7 +57,7 @@ describe("GoogleOAuth", () => {
       accessToken: ACCESS_TOKEN,
       tokenType: "Bearer",
       expiresIn: 3599,
-      scopes: ["openid", "email"],
+      scope: "openid email",
       idToken: ID_TOKEN,
     });
   });

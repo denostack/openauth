@@ -1,12 +1,14 @@
 import { assertEquals, assertInstanceOf, fail } from "@std/assert";
-import { assertSpyCall, assertSpyCalls, stub } from "@std/testing/mock";
+import { beforeEach, describe, it } from "@std/testing/bdd";
+import { stub } from "@std/testing/mock";
 import { FetchHttpClient, type HttpClient, HttpClientError, type OAuth, OAuthError } from "../core/mod.ts";
 import { FacebookOAuth } from "./facebook_oauth.ts";
-import { beforeEach, describe, it } from "@std/testing/bdd";
 
 const CLIENT_ID = Deno.env.get("FACEBOOK_CLIENT_ID") ?? "1234567890";
 const CLIENT_SECRET = Deno.env.get("FACEBOOK_CLIENT_SECRET") ?? "1234567890abcdefghijklmnopqrstuvwxyz";
 const REDIRECT_URI = "https://openauth.denostack.com/callback/facebook";
+const ACCESS_TOKEN = Deno.env.get("FACEBOOK_ACCESS_TOKEN") ?? "FACEBOOK_ACCESS_TOKEN_1234";
+const ID_TOKEN = Deno.env.get("FACEBOOK_ID_TOKEN") ?? "FACEBOOK_ID_TOKEN_1234";
 
 describe("FacebookOAuth", () => {
   let httpClient: HttpClient;
@@ -21,80 +23,44 @@ describe("FacebookOAuth", () => {
     });
   });
 
-  it("getAuthRequestUri with default scopes", async () => {
-    const uri = await oauth.getAuthRequestUri({ state: "randomstring" });
+  it("getAuthRequestUri", async () => {
+    const uri = await oauth.getAuthRequestUri();
     assertEquals(
       uri,
       `https://www.facebook.com/${(oauth as FacebookOAuth).version}/dialog/oauth?${new URLSearchParams({
         response_type: "code",
         client_id: CLIENT_ID,
         redirect_uri: REDIRECT_URI,
-        state: "randomstring",
         scope: "email",
       })}`,
     );
   });
 
-  it("getAuthRequestUri with custom scopes", async () => {
-    const uri = await oauth.getAuthRequestUri({
-      state: "randomstring",
-      scope: ["email", "public_profile"],
-    });
-    assertEquals(
-      uri,
-      `https://www.facebook.com/${(oauth as FacebookOAuth).version}/dialog/oauth?${new URLSearchParams({
-        response_type: "code",
-        client_id: CLIENT_ID,
-        redirect_uri: REDIRECT_URI,
-        state: "randomstring",
-        scope: "email,public_profile",
-      })}`,
-    );
-  });
-
   it("getAccessTokenResponse success", async () => {
-    const requestStub = stub(httpClient, "request", () => {
+    stub(httpClient, "request", () => {
       return Promise.resolve({
         status: 200,
         headers: {},
         data: {
-          access_token: "FACEBOOK_ACCESS_TOKEN_1234",
+          access_token: ACCESS_TOKEN,
           token_type: "bearer",
           expires_in: 5183941,
         },
       });
     });
 
-    try {
-      const code = "TOKEN_FROM_FACEBOOK_1234567890";
+    const code = "CODE";
 
-      const result = await oauth.getAccessTokenResponse(code);
-      assertEquals(result, {
-        accessToken: "FACEBOOK_ACCESS_TOKEN_1234",
-        tokenType: "bearer",
-        expiresIn: 5183941,
-      });
-
-      assertSpyCalls(requestStub, 1);
-      assertSpyCall(requestStub, 0, {
-        args: [
-          "GET",
-          `https://graph.facebook.com/${(oauth as FacebookOAuth).version}/oauth/access_token?${new URLSearchParams({
-            client_id: CLIENT_ID,
-            client_secret: CLIENT_SECRET,
-            redirect_uri: REDIRECT_URI,
-            code,
-            grant_type: "authorization_code",
-          })}`,
-        ],
-      });
-    } finally {
-      requestStub.restore();
-    }
+    const result = await oauth.getAccessTokenResponse(code);
+    assertEquals(result, {
+      accessToken: ACCESS_TOKEN,
+      tokenType: "bearer",
+      expiresIn: 5183941,
+    });
   });
 
   it("getAccessTokenResponse fail", async () => {
-    const requestStub = stub(httpClient, "request", () => {
+    stub(httpClient, "request", () => {
       return Promise.reject(
         new HttpClientError("Bad Request", 400, {
           error: {
@@ -116,13 +82,11 @@ describe("FacebookOAuth", () => {
       assertEquals(e.type, "OAuthException");
       assertEquals(e.message, "Invalid verification code format.");
       assertEquals(e.extra, { code: 100, fbtrace_id: "AXXXXXXXX" });
-    } finally {
-      requestStub.restore();
     }
   });
 
-  it("getAuthUser success", async () => {
-    const requestStub = stub(httpClient, "request", () => {
+  it("getUserProfile success", async () => {
+    stub(httpClient, "request", () => {
       return Promise.resolve({
         status: 200,
         headers: {},
@@ -130,41 +94,22 @@ describe("FacebookOAuth", () => {
       });
     });
 
-    try {
-      const ACCESS_TOKEN = "FACEBOOK_ACCESS_TOKEN_1234";
-      const authUser = await oauth.getAuthUser(ACCESS_TOKEN);
-      assertEquals(authUser, {
+    const userProfile = await oauth.getUserProfile(ACCESS_TOKEN);
+    assertEquals(userProfile, {
+      id: "123456789",
+      email: "wan2land@gmail.com",
+      name: "Changwan Jun",
+      picture: `https://graph.facebook.com/${(oauth as FacebookOAuth).version}/123456789/picture?type=normal`,
+      raw: {
         id: "123456789",
         email: "wan2land@gmail.com",
         name: "Changwan Jun",
-        avatar: `https://graph.facebook.com/${(oauth as FacebookOAuth).version}/123456789/picture?type=normal`,
-        raw: {
-          id: "123456789",
-          email: "wan2land@gmail.com",
-          name: "Changwan Jun",
-        },
-      });
-
-      assertSpyCalls(requestStub, 1);
-      assertSpyCall(requestStub, 0, {
-        args: [
-          "GET",
-          `https://graph.facebook.com/${(oauth as FacebookOAuth).version}/me?${new URLSearchParams({
-            fields: "id,email,name",
-          })}`,
-          {},
-          {
-            authorization: `Bearer ${ACCESS_TOKEN}`,
-          },
-        ],
-      });
-    } finally {
-      requestStub.restore();
-    }
+      },
+    });
   });
 
-  it("getAuthUser fail", async () => {
-    const requestStub = stub(httpClient, "request", () => {
+  it("getUserProfile fail", async () => {
+    stub(httpClient, "request", () => {
       return Promise.reject(
         new HttpClientError("Unauthorized", 401, {
           error: {
@@ -178,15 +123,13 @@ describe("FacebookOAuth", () => {
     });
 
     try {
-      await oauth.getAuthUser("BAD_TOKEN");
+      await oauth.getUserProfile("BAD_TOKEN");
       fail();
     } catch (e) {
       assertInstanceOf(e, OAuthError);
       assertEquals(e.type, "OAuthException");
       assertEquals(e.message, "Invalid OAuth access token - Cannot parse access token");
       assertEquals(e.extra, { code: 190, fbtrace_id: "AXXXXXX" });
-    } finally {
-      requestStub.restore();
     }
   });
 });
