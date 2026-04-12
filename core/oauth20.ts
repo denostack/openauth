@@ -25,9 +25,9 @@ export abstract class OAuth20 implements OAuth {
   abstract accessTokenRequestUri: string;
   abstract userProfileUri: string;
 
-  requestAccessTokenMethod: "get" | "application/x-www-form-urlencoded" = "application/x-www-form-urlencoded";
+  requestAccessTokenMethod: "get" | "x-www-form-urlencoded" = "x-www-form-urlencoded";
 
-  defaultScopes: string[] = [];
+  scopes: string[] = [];
   scopeSeparator: string = ",";
 
   constructor(public options: OAuth2Options) {
@@ -39,7 +39,7 @@ export abstract class OAuth20 implements OAuth {
   }
 
   getAuthRequestFields(options: AuthRequestUriOptions = {}): Record<string, string> {
-    const scope = ("scope" in options ? options.scope : this.options.scope) ?? this.defaultScopes;
+    const scope = ("scope" in options ? options.scope : this.options.scope) ?? this.scopes;
     const scopeAsArray = Array.isArray(scope) ? scope : [scope];
     return {
       response_type: options.responseType ?? "code",
@@ -100,7 +100,7 @@ export abstract class OAuth20 implements OAuth {
             throw e;
           });
       }
-      case "application/x-www-form-urlencoded":
+      case "x-www-form-urlencoded":
       default: {
         return this.httpClient.request<Record<string, unknown>>(
           "POST",
@@ -125,7 +125,7 @@ export abstract class OAuth20 implements OAuth {
   mapDataToAccessTokenResponse(data: Record<string, unknown>): AccessTokenResponse {
     return {
       accessToken: data.access_token as string,
-      ...typeof data.scope === "string" && { scope: data.scope },
+      ...typeof data.scope === "string" && { scopes: data.scope.split(this.scopeSeparator).filter((t) => t.trim()) },
       ...typeof data.token_type === "string" && { tokenType: data.token_type },
       ...typeof data.expires_in === "number" && { expiresIn: data.expires_in },
       ...typeof data.expires_in === "string" && { expiresIn: +data.expires_in },
