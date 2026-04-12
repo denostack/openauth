@@ -57,7 +57,7 @@ export class FetchHttpClient implements HttpClient {
     }
     return {
       status,
-      headers: Object.fromEntries([...response.headers]),
+      headers: Object.fromEntries(response.headers),
       data: data as T,
     };
   }
