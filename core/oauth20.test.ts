@@ -54,6 +54,8 @@ describe("OAuth20", () => {
       responseType: "token",
       scope: ["openid", "profile", "email"],
       state: "randomstring",
+      prompt: "login",
+      loginHint: "[EMAIL_ADDRESS]",
       extra: {
         nonce: "nonce",
       },
@@ -66,6 +68,8 @@ describe("OAuth20", () => {
         redirect_uri: "OVERRIDE_REDIRECT_URI",
         state: "randomstring",
         scope: "openid|profile|email",
+        prompt: "login",
+        login_hint: "[EMAIL_ADDRESS]",
         nonce: "nonce",
       })}`,
     );

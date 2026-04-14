@@ -5,6 +5,8 @@ export interface AuthRequestUriOptions {
   responseType?: string;
   scope?: string[] | string | null;
   state?: string;
+  prompt?: string;
+  loginHint?: string;
   /** extra parameters */
   extra?: Record<string, string>;
 }
