@@ -54,6 +54,9 @@ describe("OAuth20", () => {
       responseType: "token",
       scope: ["openid", "profile", "email"],
       state: "randomstring",
+      extra: {
+        nonce: "nonce",
+      },
     });
     assertEquals(
       uri,
@@ -63,6 +66,7 @@ describe("OAuth20", () => {
         redirect_uri: "OVERRIDE_REDIRECT_URI",
         state: "randomstring",
         scope: "openid|profile|email",
+        nonce: "nonce",
       })}`,
     );
   });

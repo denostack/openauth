@@ -46,6 +46,7 @@ export abstract class OAuth20 implements OAuth {
       redirect_uri: options.redirectUri ?? this.options.redirectUri,
       ...options.state ? { state: options.state } : {},
       ...scopeAsArray.length > 0 ? { scope: this.buildScopes(scopeAsArray) } : {},
+      ...options.extra ?? {},
     };
   }
 

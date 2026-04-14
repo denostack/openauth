@@ -1,9 +1,12 @@
 export interface AuthRequestUriOptions {
-  responseType?: string;
   clientId?: string;
   redirectUri?: string;
+  /** default: "code" */
+  responseType?: string;
   scope?: string[] | string | null;
   state?: string;
+  /** extra parameters */
+  extra?: Record<string, string>;
 }
 
 export interface AccessTokenResponseOptions {
