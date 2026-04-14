@@ -15,7 +15,10 @@ export class NaverOAuth extends OAuth20 {
   accessTokenRequestUri = "https://nid.naver.com/oauth2.0/token";
   userProfileUri = "https://openapi.naver.com/v1/nid/me";
 
-  override scopes = ["openid"];
+  /**
+   * @see https://developers.naver.com/docs/login/api/api.md#3-1--%EB%84%A4%EC%9D%B4%EB%B2%84-%EB%A1%9C%EA%B7%B8%EC%9D%B8-%EC%9D%B8%EC%A6%9D-%EC%9A%94%EC%B2%AD
+   */
+  override scopes = [];
   override scopeSeparator = ",";
 
   override requestAccessTokenMethod = "get" as const;
