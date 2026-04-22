@@ -13,6 +13,9 @@ export class GoogleOAuth extends OAuth20 {
   accessTokenRequestUri = "https://oauth2.googleapis.com/token";
   userProfileUri = "https://www.googleapis.com/oauth2/v3/userinfo";
 
+  override jwksUri = "https://www.googleapis.com/oauth2/v3/certs";
+  override jwtIssuer = "https://accounts.google.com";
+
   override scopes = ["openid"];
   override scopeSeparator = " ";
 

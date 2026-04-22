@@ -181,6 +181,7 @@ export abstract class OAuth20 implements OAuth {
         options.withoutValidation ? {} : {
           ...(this.jwksUri ? { jwksUri: this.jwksUri } : {}),
           ...(this.jwtIssuer ? { issuer: this.jwtIssuer } : {}),
+          audience: this.options.clientId,
           now: new Date(),
         },
       ),

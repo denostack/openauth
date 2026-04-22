@@ -1,7 +1,15 @@
 import { assertEquals, assertInstanceOf, fail } from "@std/assert";
 import { beforeEach, describe, it } from "@std/testing/bdd";
 import { stub } from "@std/testing/mock";
-import { FetchHttpClient, type HttpClient, HttpClientError, type OAuth, OAuthError } from "../core/mod.ts";
+import {
+  FetchHttpClient,
+  type HttpClient,
+  HttpClientError,
+  type JwtVerifier,
+  type OAuth,
+  OAuthError,
+  WebCryptoJwtVerifier,
+} from "../core/mod.ts";
 import { GoogleOAuth } from "./google_oauth.ts";
 
 const CLIENT_ID = Deno.env.get("GOOGLE_CLIENT_ID") ?? "1234567890";
@@ -12,11 +20,14 @@ const ID_TOKEN = Deno.env.get("GOOGLE_ID_TOKEN") ?? "GOOGLE_ID_TOKEN_1234";
 
 describe("GoogleOAuth", () => {
   let httpClient: HttpClient;
+  let jwtVerifier: JwtVerifier;
   let oauth: OAuth;
   beforeEach(() => {
     httpClient = new FetchHttpClient();
+    jwtVerifier = new WebCryptoJwtVerifier();
     oauth = new GoogleOAuth({
       httpClient,
+      jwtVerifier,
       clientId: CLIENT_ID,
       clientSecret: CLIENT_SECRET,
       redirectUri: REDIRECT_URI,
@@ -131,5 +142,38 @@ describe("GoogleOAuth", () => {
       assertEquals(e.type, "invalid_request");
       assertEquals(e.message, "Invalid Credentials");
     }
+  });
+
+  it("getUserProfileFromIdToken success", async () => {
+    stub(jwtVerifier, "verify", () => {
+      return Promise.resolve({
+        at_hash: "jt-9_GXbRMcxpKjvHjxBdg",
+        aud: CLIENT_ID,
+        azp: CLIENT_ID,
+        email: "wan2land@gmail.com",
+        email_verified: true,
+        exp: 1775969077,
+        iat: 1775965477,
+        iss: "https://accounts.google.com",
+        sub: "123456789",
+      });
+    });
+
+    const userProfile = await oauth.getUserProfileFromIdToken(ID_TOKEN);
+    assertEquals(userProfile, {
+      id: "123456789",
+      email: "wan2land@gmail.com",
+      raw: {
+        at_hash: "jt-9_GXbRMcxpKjvHjxBdg",
+        aud: CLIENT_ID,
+        azp: CLIENT_ID,
+        email: "wan2land@gmail.com",
+        email_verified: true,
+        exp: 1775969077,
+        iat: 1775965477,
+        iss: "https://accounts.google.com",
+        sub: "123456789",
+      },
+    });
   });
 });
