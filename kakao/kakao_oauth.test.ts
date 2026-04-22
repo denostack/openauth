@@ -17,7 +17,7 @@ describe("KakaoOAuth", () => {
   beforeEach(() => {
     httpClient = new FetchHttpClient();
     oauth = new KakaoOAuth({
-      client: httpClient,
+      httpClient,
       clientId: CLIENT_ID,
       clientSecret: CLIENT_SECRET,
       redirectUri: REDIRECT_URI,

@@ -16,7 +16,7 @@ describe("NaverOAuth", () => {
   beforeEach(() => {
     httpClient = new FetchHttpClient();
     oauth = new NaverOAuth({
-      client: httpClient,
+      httpClient,
       clientId: CLIENT_ID,
       clientSecret: CLIENT_SECRET,
       redirectUri: REDIRECT_URI,

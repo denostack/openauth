@@ -15,7 +15,7 @@ describe("FacebookOAuth", () => {
   beforeEach(() => {
     httpClient = new FetchHttpClient();
     oauth = new FacebookOAuth({
-      client: httpClient,
+      httpClient,
       clientId: CLIENT_ID,
       clientSecret: CLIENT_SECRET,
       redirectUri: REDIRECT_URI,

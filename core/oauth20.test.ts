@@ -27,7 +27,7 @@ describe("OAuth20", () => {
   beforeEach(() => {
     httpClient = new FetchHttpClient();
     oauth = new CustomOAuth20({
-      client: httpClient,
+      httpClient,
       clientId: "CLIENT_ID",
       clientSecret: "CLIENT_SECRET",
       redirectUri: "REDIRECT_URI",

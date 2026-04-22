@@ -17,7 +17,7 @@ describe("LineOAuth", () => {
   beforeEach(() => {
     httpClient = new FetchHttpClient();
     oauth = new LineOAuth({
-      client: httpClient,
+      httpClient,
       clientId: CLIENT_ID,
       clientSecret: CLIENT_SECRET,
       redirectUri: REDIRECT_URI,

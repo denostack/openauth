@@ -16,7 +16,7 @@ describe("GitlabOAuth", () => {
   beforeEach(() => {
     httpClient = new FetchHttpClient();
     oauth = new GitlabOAuth({
-      client: httpClient,
+      httpClient,
       clientId: CLIENT_ID,
       clientSecret: CLIENT_SECRET,
       redirectUri: REDIRECT_URI,
@@ -39,7 +39,7 @@ describe("GitlabOAuth", () => {
   it("getAuthRequestUri with custom host", async () => {
     const oauth = new GitlabOAuth({
       host: "https://gitlab.example.com",
-      client: httpClient,
+      httpClient,
       clientId: CLIENT_ID,
       clientSecret: CLIENT_SECRET,
       redirectUri: REDIRECT_URI,

@@ -15,7 +15,7 @@ describe("GithubOAuth", () => {
   beforeEach(() => {
     httpClient = new FetchHttpClient();
     oauth = new GithubOAuth({
-      client: httpClient,
+      httpClient,
       clientId: CLIENT_ID,
       clientSecret: CLIENT_SECRET,
       redirectUri: REDIRECT_URI,

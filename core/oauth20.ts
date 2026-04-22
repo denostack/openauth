@@ -14,7 +14,7 @@ export interface OAuth2Options {
   clientSecret?: string | (() => Promise<string>);
   redirectUri: string;
   scope?: string[] | string;
-  client?: HttpClient;
+  httpClient?: HttpClient;
 }
 
 export abstract class OAuth20 implements OAuth {
@@ -30,7 +30,7 @@ export abstract class OAuth20 implements OAuth {
   scopeSeparator: string = ",";
 
   constructor(public options: OAuth2Options) {
-    this.httpClient = options.client ?? new FetchHttpClient();
+    this.httpClient = options.httpClient ?? new FetchHttpClient();
   }
 
   buildScopes(scopes: string[]): string {

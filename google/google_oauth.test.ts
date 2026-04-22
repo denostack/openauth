@@ -16,7 +16,7 @@ describe("GoogleOAuth", () => {
   beforeEach(() => {
     httpClient = new FetchHttpClient();
     oauth = new GoogleOAuth({
-      client: httpClient,
+      httpClient,
       clientId: CLIENT_ID,
       clientSecret: CLIENT_SECRET,
       redirectUri: REDIRECT_URI,
