@@ -3,7 +3,7 @@
 <p>
   <a href="https://github.com/denostack/openauth/actions"><img alt="Build" src="https://img.shields.io/github/actions/workflow/status/denostack/openauth/ci.yml?branch=main&logo=github&style=flat-square" /></a>
   <a href="https://codecov.io/gh/denostack/openauth"><img alt="Coverage" src="https://img.shields.io/codecov/c/gh/denostack/openauth?style=flat-square" /></a>
-  <img alt="License" src="https://img.shields.io/npm/l/openauth.svg?style=flat-square" />
+  <img alt="License" src="https://img.shields.io/github/license/denostack/openauth?style=flat-square" />
   <img alt="Language Typescript" src="https://img.shields.io/badge/language-Typescript-007acc.svg?style=flat-square" />
   <br />
   <a href="https://jsr.io/@denostack/openauth"><img alt="JSR version" src="https://jsr.io/badges/@denostack/openauth?style=flat-square" /></a>
