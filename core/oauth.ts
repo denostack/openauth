@@ -38,8 +38,13 @@ export interface UserProfile {
   raw?: unknown;
 }
 
+export interface GetUserProfileFromIdTokenOptions {
+  withoutValidation?: boolean;
+}
+
 export interface OAuth {
   getAuthRequestUri(options?: AuthRequestUriOptions): Promise<string>;
   getAccessTokenResponse(code: string, options?: AccessTokenResponseOptions): Promise<AccessTokenResponse>;
   getUserProfile(accessToken: string): Promise<UserProfile>;
+  getUserProfileFromIdToken(idToken: string, options?: GetUserProfileFromIdTokenOptions): Promise<UserProfile>;
 }

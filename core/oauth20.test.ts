@@ -1,14 +1,20 @@
 import { assertEquals } from "@std/assert";
 import { beforeEach, describe, it } from "@std/testing/bdd";
 import { assertSpyCall, assertSpyCalls, stub } from "@std/testing/mock";
+import { FakeTime } from "@std/testing/time";
 import { FetchHttpClient, type HttpClient, type OAuth } from "../core/mod.ts";
 import type { UserProfile } from "./oauth.ts";
 import { OAuth20 } from "./oauth20.ts";
+import type { JwtVerifier } from "./jwt_verifier.ts";
+import { WebCryptoJwtVerifier } from "./web_crypto_jwt_verifier.ts";
 
 class CustomOAuth20 extends OAuth20 {
   authRequestUri = "https://openauth.denostack.com/oauth2/authorize";
   accessTokenRequestUri = "https://openauth.denostack.com/oauth2/token";
   userProfileUri = "https://openauth.denostack.com/oauth2/userinfo";
+
+  override jwksUri = "https://openauth.denostack.com/.well-known/jwks.json";
+  override jwtIssuer = "https://openauth.denostack.com";
 
   override scopes = ["userinfo"];
   override scopeSeparator = "|";
@@ -23,11 +29,14 @@ class CustomOAuth20 extends OAuth20 {
 
 describe("OAuth20", () => {
   let httpClient: HttpClient;
+  let jwtVerifier: JwtVerifier;
   let oauth: OAuth;
   beforeEach(() => {
     httpClient = new FetchHttpClient();
+    jwtVerifier = new WebCryptoJwtVerifier();
     oauth = new CustomOAuth20({
       httpClient,
+      jwtVerifier,
       clientId: "CLIENT_ID",
       clientSecret: "CLIENT_SECRET",
       redirectUri: "REDIRECT_URI",
@@ -256,6 +265,64 @@ describe("OAuth20", () => {
       });
     } finally {
       requestStub.restore();
+    }
+  });
+
+  it("getUserProfileFromIdToken success", async () => {
+    const time = new FakeTime(1_700_000_000_000);
+    const verifyStub = stub(jwtVerifier, "verify", () => {
+      return Promise.resolve({
+        sub: "12345",
+        something: "something",
+      });
+    });
+
+    try {
+      const userProfile = await oauth.getUserProfileFromIdToken("ID_TOKEN");
+      assertEquals(userProfile, {
+        id: "12345",
+        raw: {
+          sub: "12345",
+          something: "something",
+        },
+      });
+      assertSpyCalls(verifyStub, 1);
+      assertSpyCall(verifyStub, 0, {
+        args: ["ID_TOKEN", {
+          jwksUri: "https://openauth.denostack.com/.well-known/jwks.json",
+          issuer: "https://openauth.denostack.com",
+          now: new Date(1_700_000_000_000),
+        }],
+      });
+    } finally {
+      verifyStub.restore();
+      time.restore();
+    }
+  });
+
+  it("getUserProfileFromIdToken withoutValidation success", async () => {
+    const verifyStub = stub(jwtVerifier, "verify", () => {
+      return Promise.resolve({
+        sub: "12345",
+        something: "something",
+      });
+    });
+
+    try {
+      const userProfile = await oauth.getUserProfileFromIdToken("ID_TOKEN", { withoutValidation: true });
+      assertEquals(userProfile, {
+        id: "12345",
+        raw: {
+          sub: "12345",
+          something: "something",
+        },
+      });
+      assertSpyCalls(verifyStub, 1);
+      assertSpyCall(verifyStub, 0, {
+        args: ["ID_TOKEN", {}],
+      });
+    } finally {
+      verifyStub.restore();
     }
   });
 });

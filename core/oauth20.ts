@@ -1,13 +1,16 @@
 import { FetchHttpClient } from "./fetch_http_client.ts";
 import { type HttpClient, HttpClientError, type HttpClientResponse } from "./http_client.ts";
+import type { JwtVerifier } from "./jwt_verifier.ts";
 import type {
   AccessTokenResponse,
   AccessTokenResponseOptions,
   AuthRequestUriOptions,
+  GetUserProfileFromIdTokenOptions,
   OAuth,
   UserProfile,
 } from "./oauth.ts";
 import { OAuthError } from "./oauth_error.ts";
+import { WebCryptoJwtVerifier } from "./web_crypto_jwt_verifier.ts";
 
 export interface OAuth2Options {
   clientId: string;
@@ -15,14 +18,19 @@ export interface OAuth2Options {
   redirectUri: string;
   scope?: string[] | string;
   httpClient?: HttpClient;
+  jwtVerifier?: JwtVerifier;
 }
 
 export abstract class OAuth20 implements OAuth {
   httpClient: HttpClient;
+  jwtVerifier: JwtVerifier;
 
   abstract authRequestUri: string;
   abstract accessTokenRequestUri: string;
   abstract userProfileUri: string;
+
+  jwksUri: string | null = null;
+  jwtIssuer: string | null = null;
 
   requestAccessTokenMethod: "get" | "x-www-form-urlencoded" = "x-www-form-urlencoded";
 
@@ -31,6 +39,7 @@ export abstract class OAuth20 implements OAuth {
 
   constructor(public options: OAuth2Options) {
     this.httpClient = options.httpClient ?? new FetchHttpClient();
+    this.jwtVerifier = options.jwtVerifier ?? new WebCryptoJwtVerifier();
   }
 
   buildScopes(scopes: string[]): string {
@@ -160,5 +169,21 @@ export abstract class OAuth20 implements OAuth {
         }
         throw e;
       });
+  }
+
+  async getUserProfileFromIdToken(
+    idToken: string,
+    options: GetUserProfileFromIdTokenOptions = {},
+  ): Promise<UserProfile> {
+    return this.mapDataToUserProfile(
+      await this.jwtVerifier.verify(
+        idToken,
+        options.withoutValidation ? {} : {
+          ...(this.jwksUri ? { jwksUri: this.jwksUri } : {}),
+          ...(this.jwtIssuer ? { issuer: this.jwtIssuer } : {}),
+          now: new Date(),
+        },
+      ),
+    );
   }
 }
