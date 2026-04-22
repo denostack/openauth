@@ -42,6 +42,34 @@ const user = await oauth.getUserProfile(token.accessToken);
 // => { id, name, email, picture, raw }
 ```
 
+### Verify ID Token
+
+When the `openid` scope is requested (the default), Google returns an `id_token` alongside the access token. You can
+verify it and extract the user profile without calling the userinfo endpoint:
+
+```ts
+const token = await oauth.getAccessTokenResponse(code);
+const user = await oauth.getUserProfileFromIdToken(token.idToken!);
+// => { id, email, raw }
+```
+
+This verifies:
+
+- **Signature** against Google's JWKS (`https://www.googleapis.com/oauth2/v3/certs`)
+- **Issuer** matches `https://accounts.google.com`
+- **Audience** matches your `clientId`
+- **Expiration** (`exp`) is in the future
+
+If any check fails, a `JwtVerifierError` is thrown.
+
+If you have already validated the token elsewhere and just want to decode the payload, pass `withoutValidation`:
+
+```ts
+const user = await oauth.getUserProfileFromIdToken(token.idToken!, {
+  withoutValidation: true,
+});
+```
+
 ### Custom Scopes
 
 The default scope is `openid`. You can override it in the constructor or per request:

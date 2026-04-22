@@ -28,15 +28,27 @@ const token = await oauth.getAccessTokenResponse(code);
 const user = await oauth.getUserProfile(token.accessToken);
 ```
 
+For OIDC providers (e.g. Google), you can skip the extra HTTP request and extract the profile directly from the
+`id_token`:
+
+```ts
+const user = await oauth.getUserProfileFromIdToken(token.idToken);
+```
+
+The token's signature (via JWKS), issuer, audience, and expiration are all verified.
+
 ## Providers
 
-| Provider | README                  |
-| -------- | ----------------------- |
-| Discord  | [discord/](./discord)   |
-| Facebook | [facebook/](./facebook) |
-| GitHub   | [github/](./github)     |
-| GitLab   | [gitlab/](./gitlab)     |
-| Google   | [google/](./google)     |
-| Kakao    | [kakao/](./kakao)       |
-| LINE     | [line/](./line)         |
-| Naver    | [naver/](./naver)       |
+| Provider               | OIDC |
+| ---------------------- | :--: |
+| [Discord](./discord)   |      |
+| [Facebook](./facebook) |      |
+| [GitHub](./github)     |      |
+| [GitLab](./gitlab)     |      |
+| [Google](./google)     |  ✓   |
+| [Kakao](./kakao)       |      |
+| [LINE](./line)         |      |
+| [Naver](./naver)       |      |
+
+Click a provider to see its detailed usage guide. The **OIDC** column marks providers that support
+[`getUserProfileFromIdToken`](#usage) — verifying a signed `id_token` instead of calling the userinfo endpoint.
