@@ -1,21 +1,33 @@
 import { assertEquals, assertInstanceOf, fail } from "@std/assert";
 import { beforeEach, describe, it } from "@std/testing/bdd";
 import { stub } from "@std/testing/mock";
-import { FetchHttpClient, type HttpClient, HttpClientError, type OAuth, OAuthError } from "../core/mod.ts";
+import {
+  FetchHttpClient,
+  type HttpClient,
+  HttpClientError,
+  type JwtVerifier,
+  type OAuth,
+  OAuthError,
+  WebCryptoJwtVerifier,
+} from "../core/mod.ts";
 import { FacebookOAuth } from "./facebook_oauth.ts";
 
 const CLIENT_ID = Deno.env.get("FACEBOOK_CLIENT_ID") ?? "1234567890";
 const CLIENT_SECRET = Deno.env.get("FACEBOOK_CLIENT_SECRET") ?? "1234567890abcdefghijklmnopqrstuvwxyz";
 const REDIRECT_URI = "https://openauth.denostack.com/callback/facebook";
 const ACCESS_TOKEN = Deno.env.get("FACEBOOK_ACCESS_TOKEN") ?? "FACEBOOK_ACCESS_TOKEN_1234";
+const ID_TOKEN = Deno.env.get("FACEBOOK_ID_TOKEN") ?? "FACEBOOK_ID_TOKEN_1234";
 
 describe("FacebookOAuth", () => {
   let httpClient: HttpClient;
+  let jwtVerifier: JwtVerifier;
   let oauth: OAuth;
   beforeEach(() => {
     httpClient = new FetchHttpClient();
+    jwtVerifier = new WebCryptoJwtVerifier();
     oauth = new FacebookOAuth({
       httpClient,
+      jwtVerifier,
       clientId: CLIENT_ID,
       clientSecret: CLIENT_SECRET,
       redirectUri: REDIRECT_URI,
@@ -130,5 +142,42 @@ describe("FacebookOAuth", () => {
       assertEquals(e.message, "Invalid OAuth access token - Cannot parse access token");
       assertEquals(e.extra, { code: 190, fbtrace_id: "AXXXXXX" });
     }
+  });
+
+  it("getUserProfileFromIdToken success", async () => {
+    stub(jwtVerifier, "verify", () => {
+      return Promise.resolve({
+        iss: "https://www.facebook.com",
+        aud: CLIENT_ID,
+        sub: "123456789",
+        exp: 1775969077,
+        iat: 1775965477,
+        jti: "abcdef1234",
+        nonce: "randomnonce",
+        name: "Changwan Jun",
+        email: "wan2land@gmail.com",
+        picture: "https://scontent.xx.fbcdn.net/v/picture.jpg",
+      });
+    });
+
+    const userProfile = await oauth.getUserProfileFromIdToken(ID_TOKEN);
+    assertEquals(userProfile, {
+      id: "123456789",
+      name: "Changwan Jun",
+      email: "wan2land@gmail.com",
+      picture: "https://scontent.xx.fbcdn.net/v/picture.jpg",
+      raw: {
+        iss: "https://www.facebook.com",
+        aud: CLIENT_ID,
+        sub: "123456789",
+        exp: 1775969077,
+        iat: 1775965477,
+        jti: "abcdef1234",
+        nonce: "randomnonce",
+        name: "Changwan Jun",
+        email: "wan2land@gmail.com",
+        picture: "https://scontent.xx.fbcdn.net/v/picture.jpg",
+      },
+    });
   });
 });

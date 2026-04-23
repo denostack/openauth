@@ -21,6 +21,9 @@ export class FacebookOAuth extends OAuth20 {
     return `https://graph.facebook.com/${this.version}/me?${new URLSearchParams({ fields: "id,email,name" })}`;
   }
 
+  override jwksUri = "https://www.facebook.com/.well-known/oauth/openid/jwks";
+  override jwtIssuer = "https://www.facebook.com";
+
   override scopes = ["email"];
   override scopeSeparator = ",";
 
@@ -44,13 +47,12 @@ export class FacebookOAuth extends OAuth20 {
     return super.createErrorFromHttpClientError(e);
   }
 
-  mapDataToUserProfile(data: unknown): UserProfile {
-    const raw = data as UserRawData;
+  mapDataToUserProfile(data: UserRawData): UserProfile {
     return {
-      id: raw.id,
-      ...raw.name && { name: raw.name },
-      ...raw.email && { email: raw.email },
-      picture: `https://graph.facebook.com/${this.version}/${raw.id}/picture?type=normal`,
+      id: data.id,
+      ...data.name && { name: data.name },
+      ...data.email && { email: data.email },
+      picture: `https://graph.facebook.com/${this.version}/${data.id}/picture?type=normal`,
       raw: data,
     };
   }

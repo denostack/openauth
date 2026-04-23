@@ -43,6 +43,42 @@ const user = await oauth.getUserProfile(token.accessToken);
 // => { id, username, name, email, picture, raw }
 ```
 
+### Verify ID Token
+
+GitLab returns an `id_token` alongside the access token when the `openid` scope is requested. You can verify it and
+extract the user profile without calling the userinfo endpoint:
+
+```ts
+const oauth = new GitlabOAuth({
+  clientId: "your_client_id",
+  clientSecret: "your_client_secret",
+  redirectUri: "https://example.com/callback/gitlab",
+  scope: ["openid", "profile", "email"],
+});
+
+const token = await oauth.getAccessTokenResponse(code);
+const user = await oauth.getUserProfileFromIdToken(token.idToken!);
+```
+
+This verifies:
+
+- **Signature** against GitLab's JWKS (`{host}/oauth/discovery/keys`)
+- **Issuer** matches your GitLab `host` (`https://gitlab.com` by default)
+- **Audience** matches your `clientId`
+- **Expiration** (`exp`) is in the future
+
+If any check fails, a `JwtVerifierError` is thrown.
+
+> For self-hosted GitLab, the issuer and JWKS URI are derived from the `host` option you pass to the constructor.
+
+If you have already validated the token elsewhere and just want to decode the payload, pass `withoutValidation`:
+
+```ts
+const user = await oauth.getUserProfileFromIdToken(token.idToken!, {
+  withoutValidation: true,
+});
+```
+
 ### Custom Scopes
 
 The default scope is `read_user`. You can override it in the constructor or per request:

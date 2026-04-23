@@ -43,6 +43,37 @@ const user = await oauth.getUserProfile(token.accessToken);
 // => { id, name, email, picture, raw }
 ```
 
+### Verify ID Token
+
+Facebook's standard web OAuth flow does **not** return an `id_token`. However, Facebook's
+[Limited Login](https://developers.facebook.com/docs/facebook-login/limited-login/) (iOS/Android only) returns an
+OIDC-compliant `id_token` that you can verify server-side:
+
+```ts
+// The idToken comes from the Facebook SDK on iOS/Android, not from oauth.getAccessTokenResponse()
+const user = await oauth.getUserProfileFromIdToken(idToken);
+```
+
+This verifies:
+
+- **Signature** against Facebook's JWKS (`https://www.facebook.com/.well-known/oauth/openid/jwks/`)
+- **Issuer** matches `https://www.facebook.com`
+- **Audience** matches your `clientId` (app ID)
+- **Expiration** (`exp`) is in the future
+
+If any check fails, a `JwtVerifierError` is thrown.
+
+> This flow is meant for validating tokens obtained from the mobile Facebook SDK's Limited Login. Tokens from the
+> standard web OAuth flow (`getAccessTokenResponse`) do not include an `id_token`.
+
+If you have already validated the token elsewhere and just want to decode the payload, pass `withoutValidation`:
+
+```ts
+const user = await oauth.getUserProfileFromIdToken(idToken, {
+  withoutValidation: true,
+});
+```
+
 ### Custom Scopes
 
 The default scope is `email`. You can override it in the constructor or per request:

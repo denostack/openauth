@@ -10,6 +10,7 @@ export interface UserRawData {
 
 export interface GitlabOAuthOptions extends OAuth2Options {
   host?: string;
+  jwksUri?: string;
 }
 
 export class GitlabOAuth extends OAuth20 {
@@ -31,6 +32,8 @@ export class GitlabOAuth extends OAuth20 {
   constructor(options: GitlabOAuthOptions) {
     super(options);
     this.host = (options.host ?? "https://gitlab.com").replace(/\/+$/, "");
+    this.jwksUri = options.jwksUri ?? `${this.host}/oauth/discovery/keys`;
+    this.jwtIssuer = this.host;
   }
 
   mapDataToUserProfile(data: UserRawData): UserProfile {

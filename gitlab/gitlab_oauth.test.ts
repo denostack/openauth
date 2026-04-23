@@ -1,7 +1,15 @@
 import { assertEquals, assertInstanceOf, fail } from "@std/assert";
 import { beforeEach, describe, it } from "@std/testing/bdd";
 import { stub } from "@std/testing/mock";
-import { FetchHttpClient, type HttpClient, HttpClientError, type OAuth, OAuthError } from "../core/mod.ts";
+import {
+  FetchHttpClient,
+  type HttpClient,
+  HttpClientError,
+  type JwtVerifier,
+  type OAuth,
+  OAuthError,
+  WebCryptoJwtVerifier,
+} from "../core/mod.ts";
 import { GitlabOAuth } from "./gitlab_oauth.ts";
 
 const CLIENT_ID = Deno.env.get("GITLAB_CLIENT_ID") ?? "1234567890";
@@ -9,14 +17,18 @@ const CLIENT_SECRET = Deno.env.get("GITLAB_CLIENT_SECRET") ?? "1234567890abcdefg
 const REDIRECT_URI = "https://openauth.denostack.com/callback/gitlab";
 const ACCESS_TOKEN = Deno.env.get("GITLAB_ACCESS_TOKEN") ?? "GITLAB_ACCESS_TOKEN_1234";
 const REFRESH_TOKEN = Deno.env.get("GITLAB_REFRESH_TOKEN") ?? "GITLAB_REFRESH_TOKEN_1234";
+const ID_TOKEN = Deno.env.get("GITLAB_ID_TOKEN") ?? "GITLAB_ID_TOKEN_1234";
 
 describe("GitlabOAuth", () => {
   let httpClient: HttpClient;
+  let jwtVerifier: JwtVerifier;
   let oauth: OAuth;
   beforeEach(() => {
     httpClient = new FetchHttpClient();
+    jwtVerifier = new WebCryptoJwtVerifier();
     oauth = new GitlabOAuth({
       httpClient,
+      jwtVerifier,
       clientId: CLIENT_ID,
       clientSecret: CLIENT_SECRET,
       redirectUri: REDIRECT_URI,
@@ -160,5 +172,51 @@ describe("GitlabOAuth", () => {
       assertEquals(e.type, "Unauthorized");
       assertEquals(e.message, "401 Unauthorized");
     }
+  });
+
+  it("getUserProfileFromIdToken success", async () => {
+    stub(jwtVerifier, "verify", () => {
+      return Promise.resolve({
+        iss: "https://gitlab.com",
+        sub: "123456",
+        aud: CLIENT_ID,
+        exp: 1775969077,
+        iat: 1775965477,
+        auth_time: 1775965477,
+        name: "Changwan Jun",
+        nickname: "wan2land",
+        preferred_username: "wan2land",
+        email: "wan2land@gmail.com",
+        email_verified: true,
+        profile: "https://gitlab.com/wan2land",
+        picture: "https://gitlab.com/uploads/photo.png",
+      });
+    });
+
+    const userProfile = await oauth.getUserProfileFromIdToken(ID_TOKEN);
+    assertEquals(userProfile, {
+      id: "123456",
+      username: "wan2land",
+      nickname: "wan2land",
+      name: "Changwan Jun",
+      email: "wan2land@gmail.com",
+      emailVerified: true,
+      picture: "https://gitlab.com/uploads/photo.png",
+      raw: {
+        iss: "https://gitlab.com",
+        sub: "123456",
+        aud: CLIENT_ID,
+        exp: 1775969077,
+        iat: 1775965477,
+        auth_time: 1775965477,
+        name: "Changwan Jun",
+        nickname: "wan2land",
+        preferred_username: "wan2land",
+        email: "wan2land@gmail.com",
+        email_verified: true,
+        profile: "https://gitlab.com/wan2land",
+        picture: "https://gitlab.com/uploads/photo.png",
+      },
+    });
   });
 });
