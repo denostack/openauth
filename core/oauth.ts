@@ -36,7 +36,21 @@ export interface UserProfile {
   email?: string;
   emailVerified?: boolean;
   picture?: string;
+  /**
+   * @example Europe/Paris or America/Los_Angeles
+   */
+  zoneinfo?: string;
+  /**
+   * Preferred language, as a BCP 47 language tag.
+   * @example en-US
+   */
   locale?: string;
+  gender?: "male" | "female";
+  /**
+   * Birth date in yyyy-MM-dd format.
+   * @example 1980-01-01
+   */
+  birthdate?: string;
   raw?: unknown;
 }
 

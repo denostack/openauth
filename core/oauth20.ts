@@ -10,6 +10,7 @@ import type {
   UserProfile,
 } from "./oauth.ts";
 import { OAuthError } from "./oauth_error.ts";
+import type { OidcIdTokenClaims } from "./oidc.ts";
 import { WebCryptoJwtVerifier } from "./web_crypto_jwt_verifier.ts";
 
 export interface OAuth2Options {
@@ -157,6 +158,23 @@ export abstract class OAuth20 implements OAuth {
   }
 
   abstract mapDataToUserProfile(data: unknown): UserProfile;
+
+  mapOidcIdTokenClaimsToUserProfile(data: OidcIdTokenClaims): UserProfile {
+    return {
+      id: data.sub,
+      ...(data.preferred_username && { username: data.preferred_username }),
+      ...(data.nickname && { nickname: data.nickname }),
+      ...(data.name && { name: data.name }),
+      ...(data.email && { email: data.email }),
+      ...(typeof data.email_verified === "boolean" && { emailVerified: data.email_verified }),
+      ...(data.picture && { picture: data.picture }),
+      ...(data.zoneinfo && { zoneinfo: data.zoneinfo }),
+      ...(data.locale && { locale: data.locale }),
+      ...(data.gender && { gender: data.gender }),
+      ...(data.birthdate && { birthdate: data.birthdate }),
+      raw: data,
+    };
+  }
 
   getUserProfile(accessToken: string): Promise<UserProfile> {
     return this.httpClient.request<unknown>("GET", this.userProfileUri, {}, {

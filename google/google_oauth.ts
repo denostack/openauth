@@ -1,16 +1,7 @@
-import { OAuth20, type UserProfile } from "../core/mod.ts";
+import { OAuth20, type OidcIdTokenClaims, type UserProfile } from "../core/mod.ts";
 
-export interface UserRawData {
+export interface UserRawData extends OidcIdTokenClaims {
   hd?: string; // hosted domain (ex. denostack.com)
-  sub: string;
-  name?: string;
-  nickname?: string;
-  email?: string;
-  locale?: string;
-  picture?: string;
-  given_name?: string;
-  family_name?: string;
-  email_verified?: boolean;
 }
 
 export class GoogleOAuth extends OAuth20 {
@@ -25,15 +16,6 @@ export class GoogleOAuth extends OAuth20 {
   override scopeSeparator = " ";
 
   mapDataToUserProfile(data: UserRawData): UserProfile {
-    return {
-      id: data.sub,
-      ...(data.nickname && { nickname: data.nickname }),
-      ...(data.name && { name: data.name }),
-      ...(data.email && { email: data.email }),
-      ...(typeof data.email_verified === "boolean" && { emailVerified: data.email_verified }),
-      ...(data.locale && { locale: data.locale }),
-      ...(data.picture && { picture: data.picture }),
-      raw: data,
-    };
+    return this.mapOidcIdTokenClaimsToUserProfile(data);
   }
 }
