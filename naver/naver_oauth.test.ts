@@ -96,6 +96,9 @@ describe("NaverOAuth", () => {
             profile_image: "https://phinf.pstatic.net/contact/1234567",
             email: "wan2land@gmail.com",
             name: "Changwan Jun",
+            gender: "M",
+            birthday: "10-01",
+            birthyear: "1980",
           },
         },
       });
@@ -108,12 +111,17 @@ describe("NaverOAuth", () => {
       picture: "https://phinf.pstatic.net/contact/1234567",
       email: "wan2land@gmail.com",
       name: "Changwan Jun",
+      birthdate: "1980-10-01",
+      gender: "male",
       raw: {
         id: "123456789",
         nickname: "Cris",
         profile_image: "https://phinf.pstatic.net/contact/1234567",
         email: "wan2land@gmail.com",
         name: "Changwan Jun",
+        gender: "M",
+        birthday: "10-01",
+        birthyear: "1980",
       },
     });
   });

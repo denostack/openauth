@@ -1,12 +1,20 @@
 import { OAuth20, type UserProfile } from "../core/mod.ts";
 
+/**
+ * @see https://developers.naver.com/docs/login/profile/profile.md
+ */
 export interface UserRawData {
   response: {
     id: string;
     nickname?: string;
-    profile_image?: string;
-    email?: string;
     name?: string;
+    email?: string;
+    gender?: "M" | "F" | "U";
+    age?: string;
+    birthyear?: string; // yyyy
+    birthday?: string; // MM-dd
+    mobile?: string;
+    profile_image?: string;
   };
 }
 
@@ -30,6 +38,9 @@ export class NaverOAuth extends OAuth20 {
       ...(data.response.profile_image && { picture: data.response.profile_image }),
       ...(data.response.nickname && { nickname: data.response.nickname }),
       ...(data.response.email && { email: data.response.email }),
+      ...(data.response.birthyear && data.response.birthday &&
+        { birthdate: `${data.response.birthyear}-${data.response.birthday}` }),
+      ...(data.response.gender === "M" ? { gender: "male" } : data.response.gender === "F" ? { gender: "female" } : {}),
       raw: data.response,
     };
   }

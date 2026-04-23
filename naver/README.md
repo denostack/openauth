@@ -44,20 +44,5 @@ const user = await oauth.getUserProfile(token.accessToken);
 
 ### Custom Scopes
 
-The default scope is `openid`. You can override it in the constructor or per request:
-
-```ts
-// Set scopes in the constructor
-const oauth = new NaverOAuth({
-  clientId: "your_client_id",
-  clientSecret: "your_client_secret",
-  redirectUri: "https://example.com/callback/naver",
-  scope: ["openid", "email"],
-});
-
-// Or override per request
-const url = await oauth.getAuthRequestUri({
-  state: "random_state",
-  scope: ["openid", "email", "name"],
-});
-```
+Naver does not use scopes to control access — all permissions are configured in the Naver Developers application
+console. No scopes are requested by default.
