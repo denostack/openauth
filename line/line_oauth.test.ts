@@ -1,7 +1,15 @@
 import { assertEquals, assertInstanceOf, fail } from "@std/assert";
 import { beforeEach, describe, it } from "@std/testing/bdd";
 import { stub } from "@std/testing/mock";
-import { FetchHttpClient, type HttpClient, HttpClientError, type OAuth, OAuthError } from "../core/mod.ts";
+import {
+  FetchHttpClient,
+  type HttpClient,
+  HttpClientError,
+  type JwtVerifier,
+  type OAuth,
+  OAuthError,
+  WebCryptoJwtVerifier,
+} from "../core/mod.ts";
 import { LineOAuth } from "./line_oauth.ts";
 
 const CLIENT_ID = Deno.env.get("LINE_CLIENT_ID") ?? "1234567890";
@@ -13,11 +21,14 @@ const ID_TOKEN = Deno.env.get("LINE_ID_TOKEN") ?? "LINE_ID_TOKEN_1234";
 
 describe("LineOAuth", () => {
   let httpClient: HttpClient;
+  let jwtVerifier: JwtVerifier;
   let oauth: OAuth;
   beforeEach(() => {
     httpClient = new FetchHttpClient();
+    jwtVerifier = new WebCryptoJwtVerifier();
     oauth = new LineOAuth({
       httpClient,
+      jwtVerifier,
       clientId: CLIENT_ID,
       clientSecret: CLIENT_SECRET,
       redirectUri: REDIRECT_URI,
@@ -25,13 +36,14 @@ describe("LineOAuth", () => {
   });
 
   it("getAuthRequestUri", async () => {
-    const uri = await oauth.getAuthRequestUri();
+    const uri = await oauth.getAuthRequestUri({ state: "randomstring" });
     assertEquals(
       uri,
       `https://access.line.me/oauth2/v2.1/authorize?${new URLSearchParams({
         response_type: "code",
         client_id: CLIENT_ID,
         redirect_uri: REDIRECT_URI,
+        state: "randomstring",
         scope: "openid profile",
       })}`,
     );
@@ -133,5 +145,44 @@ describe("LineOAuth", () => {
       assertEquals(e.type, "Unauthorized");
       assertEquals(e.message, "invalid token");
     }
+  });
+
+  it("getUserProfileFromIdToken success", async () => {
+    stub(jwtVerifier, "verify", () => {
+      return Promise.resolve({
+        iss: "https://access.line.me",
+        amr: [
+          "linesso",
+        ],
+        sub: "U1234567890",
+        aud: CLIENT_ID,
+        exp: 1775969077,
+        iat: 1775965477,
+        name: "Changwan Jun",
+        picture: "https://profile.line-scdn.net/1234",
+        email: "wan2land@gmail.com",
+      });
+    });
+
+    const userProfile = await oauth.getUserProfileFromIdToken(ID_TOKEN);
+    assertEquals(userProfile, {
+      id: "U1234567890",
+      name: "Changwan Jun",
+      picture: "https://profile.line-scdn.net/1234",
+      email: "wan2land@gmail.com",
+      raw: {
+        iss: "https://access.line.me",
+        amr: [
+          "linesso",
+        ],
+        sub: "U1234567890",
+        aud: CLIENT_ID,
+        exp: 1775969077,
+        iat: 1775965477,
+        name: "Changwan Jun",
+        picture: "https://profile.line-scdn.net/1234",
+        email: "wan2land@gmail.com",
+      },
+    });
   });
 });

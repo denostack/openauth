@@ -159,6 +159,19 @@ export abstract class OAuth20 implements OAuth {
 
   abstract mapDataToUserProfile(data: unknown): UserProfile;
 
+  getUserProfile(accessToken: string): Promise<UserProfile> {
+    return this.httpClient.request<unknown>("GET", this.userProfileUri, {}, {
+      authorization: `Bearer ${accessToken}`,
+    })
+      .then((res) => this.mapDataToUserProfile(res.data))
+      .catch((e) => {
+        if (e instanceof HttpClientError) {
+          throw this.createErrorFromHttpClientError(e);
+        }
+        throw e;
+      });
+  }
+
   mapOidcIdTokenClaimsToUserProfile(data: OidcIdTokenClaims): UserProfile {
     return {
       id: data.sub,
@@ -174,19 +187,6 @@ export abstract class OAuth20 implements OAuth {
       ...(data.birthdate && { birthdate: data.birthdate }),
       raw: data,
     };
-  }
-
-  getUserProfile(accessToken: string): Promise<UserProfile> {
-    return this.httpClient.request<unknown>("GET", this.userProfileUri, {}, {
-      authorization: `Bearer ${accessToken}`,
-    })
-      .then((res) => this.mapDataToUserProfile(res.data))
-      .catch((e) => {
-        if (e instanceof HttpClientError) {
-          throw this.createErrorFromHttpClientError(e);
-        }
-        throw e;
-      });
   }
 
   async getUserProfileFromIdToken(
@@ -206,6 +206,6 @@ export abstract class OAuth20 implements OAuth {
         now: new Date(),
       };
     }
-    return this.mapDataToUserProfile(await this.jwtVerifier.verify(idToken, verifyOptions));
+    return this.mapOidcIdTokenClaimsToUserProfile(await this.jwtVerifier.verify(idToken, verifyOptions));
   }
 }

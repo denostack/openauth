@@ -42,6 +42,33 @@ const user = await oauth.getUserProfile(token.accessToken);
 // => { id, name, picture, raw }
 ```
 
+### Verify ID Token
+
+LINE returns an `id_token` alongside the access token when the `openid` scope is requested (included in the default
+scopes). You can verify it and extract the user profile without calling the userinfo endpoint:
+
+```ts
+const token = await oauth.getAccessTokenResponse(code);
+const user = await oauth.getUserProfileFromIdToken(token.idToken!);
+```
+
+This verifies:
+
+- **Signature** against LINE's JWKS (`https://api.line.me/oauth2/v2.1/certs`, ES256)
+- **Issuer** matches `https://access.line.me`
+- **Audience** matches your `clientId` (channel ID)
+- **Expiration** (`exp`) is in the future
+
+If any check fails, a `JwtVerifierError` is thrown.
+
+If you have already validated the token elsewhere and just want to decode the payload, pass `withoutValidation`:
+
+```ts
+const user = await oauth.getUserProfileFromIdToken(token.idToken!, {
+  withoutValidation: true,
+});
+```
+
 ### Custom Scopes
 
 The default scopes are `openid profile`. You can override them in the constructor or per request:

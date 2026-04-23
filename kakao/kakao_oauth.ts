@@ -1,4 +1,4 @@
-import { type HttpClientError, OAuth20, OAuthError, type OidcIdTokenClaims, type UserProfile } from "../core/mod.ts";
+import { type HttpClientError, OAuth20, OAuthError, type UserProfile } from "../core/mod.ts";
 
 export interface UserRawData {
   id: number;
@@ -38,10 +38,7 @@ export class KakaoOAuth extends OAuth20 {
     return super.createErrorFromHttpClientError(e);
   }
 
-  mapDataToUserProfile(data: UserRawData | OidcIdTokenClaims): UserProfile {
-    if ("sub" in data) {
-      return this.mapOidcIdTokenClaimsToUserProfile(data);
-    }
+  mapDataToUserProfile(data: UserRawData): UserProfile {
     const nickname = data.properties?.nickname ?? data.kakao_account?.profile?.nickname;
     const picture = data.properties?.profile_image ?? data.kakao_account?.profile?.profile_image_url;
     return {

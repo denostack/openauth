@@ -12,6 +12,9 @@ export class LineOAuth extends OAuth20 {
   accessTokenRequestUri = "https://api.line.me/oauth2/v2.1/token";
   userProfileUri = "https://api.line.me/v2/profile";
 
+  override jwksUri = "https://api.line.me/oauth2/v2.1/certs";
+  override jwtIssuer = "https://access.line.me";
+
   override scopes = ["openid", "profile"];
   override scopeSeparator = " ";
 
