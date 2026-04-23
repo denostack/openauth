@@ -34,7 +34,9 @@ export interface UserProfile {
   nickname?: string;
   name?: string;
   email?: string;
+  emailVerified?: boolean;
   picture?: string;
+  locale?: string;
   raw?: unknown;
 }
 

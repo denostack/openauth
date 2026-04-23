@@ -101,10 +101,15 @@ describe("GoogleOAuth", () => {
         status: 200,
         headers: {},
         data: {
+          hd: "denostack.com",
           sub: "123456789",
           name: "Changwan Jun",
+          given_name: "Changwan",
+          family_name: "Jun",
           picture: "https://lh3.googleusercontent.com/1234",
-          email: "wan2land@gmail.com",
+          email: "hey@denostack.com",
+          email_verified: true,
+          locale: "ko",
         },
       });
     });
@@ -112,14 +117,21 @@ describe("GoogleOAuth", () => {
     const userProfile = await oauth.getUserProfile(ACCESS_TOKEN);
     assertEquals(userProfile, {
       id: "123456789",
-      email: "wan2land@gmail.com",
+      email: "hey@denostack.com",
       name: "Changwan Jun",
       picture: "https://lh3.googleusercontent.com/1234",
+      emailVerified: true,
+      locale: "ko",
       raw: {
+        hd: "denostack.com",
         sub: "123456789",
         name: "Changwan Jun",
+        given_name: "Changwan",
+        family_name: "Jun",
         picture: "https://lh3.googleusercontent.com/1234",
-        email: "wan2land@gmail.com",
+        email: "hey@denostack.com",
+        email_verified: true,
+        locale: "ko",
       },
     });
   });
@@ -163,6 +175,7 @@ describe("GoogleOAuth", () => {
     assertEquals(userProfile, {
       id: "123456789",
       email: "wan2land@gmail.com",
+      emailVerified: true,
       raw: {
         at_hash: "jt-9_GXbRMcxpKjvHjxBdg",
         aud: CLIENT_ID,
