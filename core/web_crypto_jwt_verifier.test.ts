@@ -135,7 +135,7 @@ describe("WebCryptoJwtVerifier", () => {
         await assertRejects(
           () => verifier.verify(token, { jwksUri: JWKS_URI }),
           JwtVerifierError,
-          "JWT header missing kid or alg",
+          "JWT header missing kid",
         );
       } finally {
         fetchStub.restore();
@@ -153,7 +153,7 @@ describe("WebCryptoJwtVerifier", () => {
         await assertRejects(
           () => verifier.verify(token, { jwksUri: JWKS_URI }),
           JwtVerifierError,
-          "JWT header missing kid or alg",
+          "JWT header missing alg",
         );
       } finally {
         fetchStub.restore();
@@ -177,7 +177,7 @@ describe("WebCryptoJwtVerifier", () => {
     it("throws when algorithm is not supported", async () => {
       const token = await signJwt(
         keyPair.privateKey,
-        { alg: "HS256", typ: "JWT", kid: KID },
+        { alg: "PS256", typ: "JWT", kid: KID },
         { sub: "12345" },
       );
       const fetchStub = stubFetch();
@@ -185,7 +185,7 @@ describe("WebCryptoJwtVerifier", () => {
         await assertRejects(
           () => verifier.verify(token, { jwksUri: JWKS_URI }),
           JwtVerifierError,
-          "Unsupported algorithm: HS256",
+          "Unsupported algorithm: PS256",
         );
       } finally {
         fetchStub.restore();
@@ -253,6 +253,50 @@ describe("WebCryptoJwtVerifier", () => {
       } finally {
         fetchStub.restore();
       }
+    });
+  });
+
+  describe("options.secret (HS256)", () => {
+    const SECRET = "shared-client-secret";
+
+    async function signHs256(payload: Record<string, unknown>, secret = SECRET): Promise<string> {
+      const encodedHeader = encodeBase64Url(JSON.stringify({ alg: "HS256", typ: "JWT" }));
+      const encodedPayload = encodeBase64Url(JSON.stringify(payload));
+      const key = await crypto.subtle.importKey(
+        "raw",
+        new TextEncoder().encode(secret),
+        { name: "HMAC", hash: "SHA-256" },
+        false,
+        ["sign"],
+      );
+      const sig = await crypto.subtle.sign(
+        { name: "HMAC" },
+        key,
+        new TextEncoder().encode(`${encodedHeader}.${encodedPayload}`),
+      );
+      return `${encodedHeader}.${encodedPayload}.${encodeBase64Url(new Uint8Array(sig))}`;
+    }
+
+    it("verifies a valid HS256 signature using secret", async () => {
+      const token = await signHs256({ sub: "12345" });
+      const payload = await verifier.verify(token, { secret: SECRET });
+      assertEquals(payload.sub, "12345");
+    });
+
+    it("throws when HS256 signature is signed with a different secret", async () => {
+      const token = await signHs256({ sub: "12345" }, "other-secret");
+      await assertRejects(
+        () => verifier.verify(token, { secret: SECRET }),
+        JwtVerifierError,
+        "JWT signature verification failed",
+      );
+    });
+
+    it("does not require kid for HMAC tokens", async () => {
+      const token = await signHs256({ sub: "12345" });
+      // no jwksUri, no kid — should still verify via secret alone
+      const payload = await verifier.verify(token, { secret: SECRET });
+      assertEquals(payload.sub, "12345");
     });
   });
 

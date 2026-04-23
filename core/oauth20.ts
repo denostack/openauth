@@ -1,6 +1,6 @@
 import { FetchHttpClient } from "./fetch_http_client.ts";
 import { type HttpClient, HttpClientError, type HttpClientResponse } from "./http_client.ts";
-import type { JwtVerifier } from "./jwt_verifier.ts";
+import type { JwtVerifier, JwtVerifyOptions } from "./jwt_verifier.ts";
 import type {
   AccessTokenResponse,
   AccessTokenResponseOptions,
@@ -193,16 +193,19 @@ export abstract class OAuth20 implements OAuth {
     idToken: string,
     options: GetUserProfileFromIdTokenOptions = {},
   ): Promise<UserProfile> {
-    return this.mapDataToUserProfile(
-      await this.jwtVerifier.verify(
-        idToken,
-        options.withoutValidation ? {} : {
-          ...(this.jwksUri ? { jwksUri: this.jwksUri } : {}),
-          ...(this.jwtIssuer ? { issuer: this.jwtIssuer } : {}),
-          audience: this.options.clientId,
-          now: new Date(),
-        },
-      ),
-    );
+    let verifyOptions: JwtVerifyOptions = {};
+    if (!options.withoutValidation) {
+      const clientSecret = typeof this.options.clientSecret === "function"
+        ? await this.options.clientSecret()
+        : this.options.clientSecret;
+      verifyOptions = {
+        ...(clientSecret && { secret: clientSecret }),
+        ...(this.jwksUri && { jwksUri: this.jwksUri }),
+        ...(this.jwtIssuer && { issuer: this.jwtIssuer }),
+        audience: this.options.clientId,
+        now: new Date(),
+      };
+    }
+    return this.mapDataToUserProfile(await this.jwtVerifier.verify(idToken, verifyOptions));
   }
 }

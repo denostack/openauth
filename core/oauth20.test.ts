@@ -290,9 +290,10 @@ describe("OAuth20", () => {
       assertSpyCall(verifyStub, 0, {
         args: ["ID_TOKEN", {
           jwksUri: "https://openauth.denostack.com/.well-known/jwks.json",
-          issuer: "https://openauth.denostack.com",
           audience: "CLIENT_ID",
           now: new Date(1_700_000_000_000),
+          issuer: "https://openauth.denostack.com",
+          secret: "CLIENT_SECRET",
         }],
       });
     } finally {
