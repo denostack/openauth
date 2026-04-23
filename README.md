@@ -39,16 +39,16 @@ The token's signature (via JWKS), issuer, audience, and expiration are all verif
 
 ## Providers
 
-| Provider               | OIDC |
-| ---------------------- | :--: |
-| [Discord](./discord)   |      |
-| [Facebook](./facebook) |      |
-| [GitHub](./github)     |      |
-| [GitLab](./gitlab)     |      |
-| [Google](./google)     |  ✓   |
-| [Kakao](./kakao)       |      |
-| [LINE](./line)         |      |
-| [Naver](./naver)       |      |
+| Provider               |     OIDC      |
+| ---------------------- | :-----------: |
+| [Discord](./discord)   | not supported |
+| [Facebook](./facebook) |       ✓       |
+| [GitHub](./github)     | not supported |
+| [GitLab](./gitlab)     |       ✓       |
+| [Google](./google)     |       ✓       |
+| [Kakao](./kakao)       |       ✓       |
+| [LINE](./line)         |       ✓       |
+| [Naver](./naver)       | not supported |
 
 Click a provider to see its detailed usage guide. The **OIDC** column marks providers that support
 [`getUserProfileFromIdToken`](#usage) — verifying a signed `id_token` instead of calling the userinfo endpoint.
