@@ -18,6 +18,7 @@ const services = [
   { name: "line", description: "LINE OAuth library" },
   { name: "discord", description: "Discord OAuth library" },
   { name: "gitlab", description: "GitLab OAuth library" },
+  { name: "apple", description: "Apple Sign In OAuth library" },
 ];
 
 // Build core first

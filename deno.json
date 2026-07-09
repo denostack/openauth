@@ -3,6 +3,7 @@
   "version": "0.5.0",
   "exports": {
     ".": "./core/mod.ts",
+    "./apple": "./apple/mod.ts",
     "./discord": "./discord/mod.ts",
     "./facebook": "./facebook/mod.ts",
     "./github": "./github/mod.ts",
@@ -18,7 +19,7 @@
     "test:format": "deno fmt --check",
     "test:lint": "deno lint",
     "test:unit": "deno test -A",
-    "test:types": "deno check core/mod.ts github/mod.ts google/mod.ts facebook/mod.ts kakao/mod.ts naver/mod.ts line/mod.ts discord/mod.ts gitlab/mod.ts",
+    "test:types": "deno check core/mod.ts apple/mod.ts github/mod.ts google/mod.ts facebook/mod.ts kakao/mod.ts naver/mod.ts line/mod.ts discord/mod.ts gitlab/mod.ts",
     "build:npm": "deno run --allow-env --allow-read --allow-write --allow-run scripts/build_npm.ts"
   },
   "imports": {

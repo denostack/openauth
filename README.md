@@ -41,6 +41,7 @@ The token's signature (via JWKS), issuer, audience, and expiration are all verif
 
 | Provider               |     OIDC      |
 | ---------------------- | :-----------: |
+| [Apple](./apple)       |       ✓       |
 | [Discord](./discord)   | not supported |
 | [Facebook](./facebook) |       ✓       |
 | [GitHub](./github)     | not supported |
