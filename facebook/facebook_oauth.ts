@@ -35,7 +35,7 @@ export class FacebookOAuth extends OAuth20 {
   }
 
   override createErrorFromHttpClientError(e: HttpClientError): OAuthError {
-    if ("error" in e.data) {
+    if (e.data !== null && typeof e.data === "object" && "error" in e.data) {
       const { error: { message, type, ...extra } = {} } = e.data as {
         error?: {
           message: string;

@@ -20,7 +20,7 @@ export class DiscordOAuth extends OAuth20 {
     const raw = data as UserRawData;
     return {
       id: raw.id,
-      nickname: raw.global_name,
+      ...raw.global_name && { nickname: raw.global_name },
       ...raw.username && { username: raw.username },
       ...raw.email && { email: raw.email },
       ...raw.avatar && { picture: `https://cdn.discordapp.com/avatars/${raw.id}/${raw.avatar}.png` },

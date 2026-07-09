@@ -21,7 +21,7 @@ export class LineOAuth extends OAuth20 {
   mapDataToUserProfile(data: UserRawData): UserProfile {
     return {
       id: data.userId,
-      name: data.displayName,
+      ...data.displayName && { name: data.displayName },
       ...data.email && { email: data.email },
       ...data.pictureUrl && { picture: data.pictureUrl },
       raw: data,

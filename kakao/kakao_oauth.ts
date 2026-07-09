@@ -31,7 +31,7 @@ export class KakaoOAuth extends OAuth20 {
   override requestAccessTokenMethod = "get" as const;
 
   override createErrorFromHttpClientError(e: HttpClientError): OAuthError {
-    if ("msg" in e.data) {
+    if (e.data !== null && typeof e.data === "object" && "msg" in e.data) {
       const { msg: message, ...extra } = e.data;
       return new OAuthError(message, e.message, extra);
     }
