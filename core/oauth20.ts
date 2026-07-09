@@ -48,7 +48,7 @@ export abstract class OAuth20 implements OAuth {
   }
 
   getAuthRequestFields(options: AuthRequestUriOptions = {}): Record<string, string> {
-    const scope = ("scope" in options ? options.scope : this.options.scope) ?? this.scopes;
+    const scope = (options.scope !== undefined ? options.scope : (this.options.scope ?? this.scopes)) ?? [];
     const scopeAsArray = Array.isArray(scope) ? scope : [scope];
     return {
       response_type: options.responseType ?? "code",
