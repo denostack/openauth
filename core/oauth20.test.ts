@@ -221,14 +221,15 @@ describe("OAuth20", () => {
       assertSpyCall(requestStub, 0, {
         args: [
           "GET",
-          `https://openauth.denostack.com/oauth2/token?${new URLSearchParams({
+          "https://openauth.denostack.com/oauth2/token",
+          {
             client_id: "OVERRIDE_CLIENT_ID",
             client_secret: "OVERRIDE_CLIENT_SECRET",
             redirect_uri: "OVERRIDE_REDIRECT_URI",
             code,
             grant_type: "authorization_code",
             state: "STATE",
-          })}`,
+          },
         ],
       });
     } finally {

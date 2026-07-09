@@ -83,14 +83,15 @@ export abstract class OAuth20 implements OAuth {
   }
 
   createErrorFromHttpClientError(e: HttpClientError): OAuthError {
-    if ("error_description" in e.data) {
-      const { error_description: message, error: type, ...extra } = e.data as {
+    const data: Record<string, unknown> = e.data !== null && typeof e.data === "object" ? e.data : {};
+    if ("error_description" in data) {
+      const { error_description: message, error: type, ...extra } = data as {
         error: string;
         error_description: string;
       };
       return new OAuthError(message || "Error occurred", type, extra);
     }
-    const { message, ...extra } = e.data as { message?: string };
+    const { message, ...extra } = data as { message?: string };
     return new OAuthError(message || "Error occurred", e.message, extra);
   }
 
@@ -105,7 +106,8 @@ export abstract class OAuth20 implements OAuth {
       case "get": {
         responsePromise = this.httpClient.request<Record<string, unknown>>(
           "GET",
-          `${this.accessTokenRequestUri}?${new URLSearchParams(fields)}`,
+          this.accessTokenRequestUri,
+          fields,
         );
         break;
       }
@@ -132,8 +134,11 @@ export abstract class OAuth20 implements OAuth {
    * @see https://tools.ietf.org/html/rfc6749#section-4.1.4
    */
   mapDataToAccessTokenResponse(data: Record<string, unknown>): AccessTokenResponse {
+    if (typeof data.access_token !== "string") {
+      throw new OAuthError("access_token is missing in the token response", undefined, data);
+    }
     return {
-      accessToken: data.access_token as string,
+      accessToken: data.access_token,
       ...typeof data.scope === "string" && { scope: data.scope },
       ...typeof data.token_type === "string" && { tokenType: data.token_type },
       ...typeof data.expires_in === "number" && { expiresIn: data.expires_in },

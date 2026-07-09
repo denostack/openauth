@@ -17,41 +17,33 @@ export class FetchHttpClient implements HttpClient {
     headers.accept = headers.accept || "application/json";
     headers["content-type"] = headers["content-type"] || "application/json";
 
+    let requestPath = path;
     let body: string | null = null;
-    if (headers["content-type"] === "application/x-www-form-urlencoded") {
+    if (method === "GET" || method === "HEAD") {
+      const url = new URL(path);
+      for (const [key, value] of Object.entries(params as Record<string, string>)) {
+        url.searchParams.append(key, value);
+      }
+      requestPath = url;
+    } else if (headers["content-type"] === "application/x-www-form-urlencoded") {
       body = new URLSearchParams(params as Record<string, string>).toString();
     } else {
       body = JSON.stringify(params);
     }
 
-    const response = await fetch(path, {
+    const response = await fetch(requestPath, {
       method,
       headers,
-      ...method !== "GET" ? { body } : {},
+      ...body !== null ? { body } : {},
     });
 
     const status = response.status;
-    if (status >= 300 && status < 400) {
-      return this.request<T>(
-        method,
-        response.headers.get("location") || "",
-        params,
-        headers,
-      );
-    }
     const contentType = response.headers.get("content-type");
-    const data = contentType?.includes("application/json") ? await response.json() : {};
-    if (response.status >= 400) {
+    const data = contentType?.includes("application/json") ? await response.json().catch(() => ({})) : {};
+    if (status >= 400 || (data !== null && typeof data === "object" && "error" in data)) {
       throw new HttpClientError(
         response.statusText,
-        response.status,
-        data,
-      );
-    }
-    if ("error" in data) {
-      throw new HttpClientError(
-        response.statusText,
-        response.status,
+        status,
         data,
       );
     }
