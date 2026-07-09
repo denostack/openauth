@@ -1,5 +1,5 @@
 export function getUnixTime(date: Date): number {
-  return ~~(date.getTime() / 1000);
+  return Math.floor(date.getTime() / 1000);
 }
 
 export function decodeBase64Url(str: string): Uint8Array<ArrayBuffer> {
