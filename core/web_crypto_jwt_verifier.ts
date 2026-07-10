@@ -5,7 +5,11 @@ import type { OidcIdTokenClaims } from "./oidc.ts";
 const textDecoder = new TextDecoder();
 
 function decodeJwtPart<T>(str: string): T {
-  return JSON.parse(textDecoder.decode(decodeBase64Url(str))) as T;
+  try {
+    return JSON.parse(textDecoder.decode(decodeBase64Url(str))) as T;
+  } catch {
+    throw new JwtVerifierError("Invalid JWT format");
+  }
 }
 
 const importAlgorithmParams: Record<string, RsaHashedImportParams | EcKeyImportParams | HmacImportParams> = {
@@ -39,8 +43,24 @@ export interface Jwks {
   keys: (JsonWebKey & { kid: string })[];
 }
 
+const JWKS_CACHE_TTL = 600_000;
+
+export interface WebCryptoJwtVerifierOptions {
+  /**
+   * Minimum interval (ms) between JWKS refetches triggered by an unknown kid, so that a flood of
+   * forged tokens cannot turn every verification into a request to the JWKS endpoint.
+   * @default 30_000
+   */
+  jwksRefetchCooldown?: number;
+}
+
 export class WebCryptoJwtVerifier implements JwtVerifier {
-  #jwksStorage = new Map<string, { jwks: Jwks; expiry: number }>();
+  #jwksStorage = new Map<string, { jwks: Jwks; fetchedAt: number }>();
+  #jwksRefetchCooldown: number;
+
+  constructor(options: WebCryptoJwtVerifierOptions = {}) {
+    this.#jwksRefetchCooldown = options.jwksRefetchCooldown ?? 30_000;
+  }
 
   async verify(token: string, options: JwtVerifyOptions = {}): Promise<OidcIdTokenClaims> {
     const parts = token.split(".");
@@ -105,18 +125,14 @@ export class WebCryptoJwtVerifier implements JwtVerifier {
     if (!kid) {
       throw new JwtVerifierError("JWT header missing kid");
     }
-    const cached = this.#jwksStorage.get(jwksUri);
-    let jwks: Jwks;
-    if (!cached || cached.expiry < Date.now()) {
-      this.#jwksStorage.delete(jwksUri);
-      jwks = await this.#fetchJwks(jwksUri);
-    } else {
-      jwks = cached.jwks;
+    let entry = this.#jwksStorage.get(jwksUri);
+    if (!entry || entry.fetchedAt + JWKS_CACHE_TTL < Date.now()) {
+      entry = await this.#fetchJwks(jwksUri);
     }
-    let jwk = jwks.keys.find((k) => k.kid === kid);
-    if (!jwk) {
-      jwks = await this.#fetchJwks(jwksUri);
-      jwk = jwks.keys.find((k) => k.kid === kid);
+    let jwk = entry.jwks.keys.find((k) => k.kid === kid);
+    if (!jwk && entry.fetchedAt + this.#jwksRefetchCooldown <= Date.now()) {
+      entry = await this.#fetchJwks(jwksUri);
+      jwk = entry.jwks.keys.find((k) => k.kid === kid);
     }
     if (!jwk) {
       throw new JwtVerifierError(`JWK not found for kid: ${kid}`);
@@ -124,13 +140,13 @@ export class WebCryptoJwtVerifier implements JwtVerifier {
     return crypto.subtle.importKey("jwk", jwk, importAlgorithmParams[alg], false, ["verify"]);
   }
 
-  async #fetchJwks(jwksUri: string): Promise<Jwks> {
+  async #fetchJwks(jwksUri: string): Promise<{ jwks: Jwks; fetchedAt: number }> {
     const response = await fetch(jwksUri);
     if (response.status !== 200) {
       throw new JwtVerifierError(`Failed to fetch JWKS: ${response.status}`);
     }
-    const jwks: Jwks = await response.json();
-    this.#jwksStorage.set(jwksUri, { jwks, expiry: Date.now() + 600_000 });
-    return jwks;
+    const entry = { jwks: await response.json() as Jwks, fetchedAt: Date.now() };
+    this.#jwksStorage.set(jwksUri, entry);
+    return entry;
   }
 }

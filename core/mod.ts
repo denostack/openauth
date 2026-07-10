@@ -12,4 +12,4 @@ export type {
 export { OAuth20, type OAuth2Options } from "./oauth20.ts";
 export { OAuthError } from "./oauth_error.ts";
 export type { OidcIdTokenClaims } from "./oidc.ts";
-export { WebCryptoJwtVerifier } from "./web_crypto_jwt_verifier.ts";
+export { WebCryptoJwtVerifier, type WebCryptoJwtVerifierOptions } from "./web_crypto_jwt_verifier.ts";

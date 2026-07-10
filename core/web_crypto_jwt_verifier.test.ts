@@ -1,6 +1,7 @@
 import { assertEquals, assertRejects } from "@std/assert";
 import { beforeEach, describe, it } from "@std/testing/bdd";
 import { assertSpyCalls, stub } from "@std/testing/mock";
+import { FakeTime } from "@std/testing/time";
 import { JwtVerifierError } from "./jwt_verifier.ts";
 import { type Jwks, WebCryptoJwtVerifier } from "./web_crypto_jwt_verifier.ts";
 
@@ -237,6 +238,7 @@ describe("WebCryptoJwtVerifier", () => {
           } as Response,
         );
       });
+      const time = new FakeTime(1_700_000_000_000);
 
       try {
         await verifier.verify(token1, { jwksUri: JWKS_URI });
@@ -247,13 +249,68 @@ describe("WebCryptoJwtVerifier", () => {
           { sub: "2" },
         );
 
+        time.tick(31_000); // past the refetch cooldown
         const payload = await verifier.verify(token2, { jwksUri: JWKS_URI });
         assertEquals(payload.sub, "2");
         assertSpyCalls(fetchStub, 2);
       } finally {
+        time.restore();
         fetchStub.restore();
       }
     });
+
+    it("does not refetch JWKS for unknown kid within the cooldown period", async () => {
+      const token1 = await makeToken({ sub: "1" });
+      const token2 = await makeToken({ sub: "2" }, { kid: "unknown-kid" });
+      const fetchStub = stubFetch();
+      try {
+        await verifier.verify(token1, { jwksUri: JWKS_URI });
+        await assertRejects(
+          () => verifier.verify(token2, { jwksUri: JWKS_URI }),
+          JwtVerifierError,
+          "JWK not found for kid: unknown-kid",
+        );
+        assertSpyCalls(fetchStub, 1);
+      } finally {
+        fetchStub.restore();
+      }
+    });
+  });
+
+  it("refetches JWKS immediately when jwksRefetchCooldown is 0", async () => {
+    const verifier = new WebCryptoJwtVerifier({ jwksRefetchCooldown: 0 });
+    const token1 = await makeToken({ sub: "1" });
+
+    const newKeyPair = await generateRs256KeyPair();
+    const newKid = "test-key-2";
+    const rotatedJwks = await generateJwks(newKeyPair.publicKey, newKid);
+
+    let callCount = 0;
+    const fetchStub = stub(globalThis, "fetch", () => {
+      callCount++;
+      return Promise.resolve(
+        {
+          status: 200,
+          json: () => Promise.resolve(callCount === 1 ? jwks : rotatedJwks),
+        } as Response,
+      );
+    });
+
+    try {
+      await verifier.verify(token1, { jwksUri: JWKS_URI });
+
+      const token2 = await signJwt(
+        newKeyPair.privateKey,
+        { alg: "RS256", typ: "JWT", kid: newKid },
+        { sub: "2" },
+      );
+
+      const payload = await verifier.verify(token2, { jwksUri: JWKS_URI });
+      assertEquals(payload.sub, "2");
+      assertSpyCalls(fetchStub, 2);
+    } finally {
+      fetchStub.restore();
+    }
   });
 
   describe("options.secret (HS256)", () => {
