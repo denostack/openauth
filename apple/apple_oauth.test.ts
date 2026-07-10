@@ -15,7 +15,11 @@ import { AppleOAuth } from "./apple_oauth.ts";
 const CLIENT_ID = Deno.env.get("APPLE_CLIENT_ID") ?? "com.example.app.sid";
 const TEAM_ID = Deno.env.get("APPLE_TEAM_ID") ?? "TEAM1234567";
 const KEY_ID = Deno.env.get("APPLE_KEY_ID") ?? "KEY1234567";
+// Throwaway P-256 key generated for tests only. Not a real credential.
 const PRIVATE_KEY = Deno.env.get("APPLE_PRIVATE_KEY") ?? `-----BEGIN PRIVATE KEY-----
+MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgXtkJV0VoojXqcmYY
+1OCmUDvKZPUJ354hcc5V/DBox4ihRANCAATW/dWYy+RrHyN3kivU4AsLTgipIIVA
+TmM89jFHJjzZl0QzhGfuBIT0gfSn+GO68gASHK5InEhqlCapNdjXO/6j
 -----END PRIVATE KEY-----`;
 const REDIRECT_URI = "https://local.manaboo.co.kr/auth/apple/callback"; // "https://openauth.denostack.com/callback/apple";
 const ACCESS_TOKEN = Deno.env.get("APPLE_ACCESS_TOKEN") ?? "APPLE_ACCESS_TOKEN_1234";
