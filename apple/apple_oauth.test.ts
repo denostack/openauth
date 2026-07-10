@@ -17,7 +17,7 @@ const TEAM_ID = Deno.env.get("APPLE_TEAM_ID") ?? "TEAM1234567";
 const KEY_ID = Deno.env.get("APPLE_KEY_ID") ?? "KEY1234567";
 const PRIVATE_KEY = Deno.env.get("APPLE_PRIVATE_KEY") ?? `-----BEGIN PRIVATE KEY-----
 -----END PRIVATE KEY-----`;
-const REDIRECT_URI = "https://openauth.denostack.com/callback/apple";
+const REDIRECT_URI = "https://local.manaboo.co.kr/auth/apple/callback"; // "https://openauth.denostack.com/callback/apple";
 const ACCESS_TOKEN = Deno.env.get("APPLE_ACCESS_TOKEN") ?? "APPLE_ACCESS_TOKEN_1234";
 const REFRESH_TOKEN = Deno.env.get("APPLE_REFRESH_TOKEN") ?? "APPLE_REFRESH_TOKEN_1234";
 const ID_TOKEN = Deno.env.get("APPLE_ID_TOKEN") ?? "APPLE_ID_TOKEN_1234";
@@ -51,6 +51,20 @@ describe("AppleOAuth", () => {
         state: "randomstring",
         scope: "name email",
         response_mode: "form_post",
+      })}`,
+    );
+  });
+
+  it("getAuthRequestUri with empty scope", async () => {
+    const uri = await oauth.getAuthRequestUri({ state: "randomstring", scope: [] });
+    assertEquals(
+      uri,
+      `https://appleid.apple.com/auth/authorize?${new URLSearchParams({
+        response_type: "code",
+        client_id: CLIENT_ID,
+        redirect_uri: REDIRECT_URI,
+        state: "randomstring",
+        response_mode: "query",
       })}`,
     );
   });

@@ -49,10 +49,12 @@ export class AppleOAuth extends OAuth20 {
   }
 
   override getAuthRequestFields(options: AuthRequestUriOptions = {}): Record<string, string> {
-    // Apple requires response_mode=form_post when the name or email scope is requested.
+    // https://developer.apple.com/documentation/signinwithapplerestapi/request-an-authorization-to-the-sign-in-with-apple-server.#url
+    // If you requested any scopes, the value must be `form_post`.
+    const fields = super.getAuthRequestFields(options);
     return {
-      ...super.getAuthRequestFields(options),
-      response_mode: "form_post",
+      ...fields,
+      response_mode: fields.scope ? "form_post" : "query",
     };
   }
 
