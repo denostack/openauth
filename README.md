@@ -7,6 +7,8 @@
   <img alt="Language Typescript" src="https://img.shields.io/badge/language-Typescript-007acc.svg?style=flat-square" />
   <br />
   <a href="https://jsr.io/@denostack/openauth"><img alt="JSR version" src="https://jsr.io/badges/@denostack/openauth?style=flat-square" /></a>
+  <a href="https://www.npmjs.com/package/@openauth/core"><img alt="NPM Version" src="https://img.shields.io/npm/v/@openauth/core.svg?style=flat-square&logo=npm" /></a>
+  <a href="https://npmcharts.com/compare/@openauth/core?minimal=true"><img alt="Downloads" src="https://img.shields.io/npm/dt/@openauth/core.svg?style=flat-square" /></a>
 </p>
 
 Pure OAuth 2.0 for any JavaScript runtime.
