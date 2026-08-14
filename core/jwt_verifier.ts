@@ -12,7 +12,7 @@ export interface JwtVerifyOptions {
   secret?: string;
   now?: Date;
   issuer?: string;
-  audience?: string;
+  audience?: string | string[];
 }
 
 export interface JwtVerifier {

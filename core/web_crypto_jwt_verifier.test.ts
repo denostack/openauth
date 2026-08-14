@@ -413,6 +413,27 @@ describe("WebCryptoJwtVerifier", () => {
         "Invalid audience: expected my-client-id",
       );
     });
+
+    it("passes when one of array audience matches string aud", async () => {
+      const token = await makeToken({ aud: "my-client-id" });
+      const payload = await verifier.verify(token, { audience: ["other-client-id", "my-client-id"] });
+      assertEquals(payload.aud, "my-client-id");
+    });
+
+    it("passes when array audience intersects array aud", async () => {
+      const token = await makeToken({ aud: ["a", "my-client-id"] });
+      const payload = await verifier.verify(token, { audience: ["my-client-id", "other-client-id"] });
+      assertEquals(payload.aud, ["a", "my-client-id"]);
+    });
+
+    it("throws when array audience does not match aud", async () => {
+      const token = await makeToken({ aud: "other-client" });
+      await assertRejects(
+        () => verifier.verify(token, { audience: ["my-client-id", "second-client-id"] }),
+        JwtVerifierError,
+        "Invalid audience: expected my-client-id, second-client-id",
+      );
+    });
   });
 
   describe("options.now", () => {

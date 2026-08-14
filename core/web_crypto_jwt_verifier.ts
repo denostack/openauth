@@ -94,9 +94,10 @@ export class WebCryptoJwtVerifier implements JwtVerifier {
       throw new JwtVerifierError(`Invalid issuer: expected ${options.issuer}, got ${payload.iss}`);
     }
     if (options.audience) {
-      const aud = Array.isArray(payload.aud) ? payload.aud : [payload.aud];
-      if (!aud.includes(options.audience)) {
-        throw new JwtVerifierError(`Invalid audience: expected ${options.audience}`);
+      const audiences = Array.isArray(payload.aud) ? payload.aud : [payload.aud];
+      const expectedAudiences = new Set(Array.isArray(options.audience) ? options.audience : [options.audience]);
+      if (!audiences.some((value) => value && expectedAudiences.has(value))) {
+        throw new JwtVerifierError(`Invalid audience: expected ${[...expectedAudiences].join(", ")}`);
       }
     }
     if (options.now && typeof payload.exp === "number" && payload.exp < getUnixTime(options.now)) {
