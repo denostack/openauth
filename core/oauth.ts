@@ -1,3 +1,5 @@
+import type { JwtVerifyOptions } from "./jwt_verifier.ts";
+
 export interface AuthRequestUriOptions {
   clientId?: string;
   redirectUri?: string;
@@ -55,7 +57,12 @@ export interface UserProfile {
 }
 
 export interface GetUserProfileFromIdTokenOptions {
-  withoutValidation?: boolean;
+  /**
+   * `false` skips id_token validation entirely.
+   * An object is merged over the provider's default verify options,
+   * e.g. `{ audience: ["com.example.app", "com.example.web"] }`.
+   */
+  verify?: boolean | JwtVerifyOptions;
 }
 
 export interface OAuth {

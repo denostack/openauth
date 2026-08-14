@@ -66,11 +66,19 @@ If any check fails, a `JwtVerifierError` is thrown.
 > This flow is meant for validating tokens obtained from the mobile Facebook SDK's Limited Login. Tokens from the
 > standard web OAuth flow (`getAccessTokenResponse`) do not include an `id_token`.
 
-If you have already validated the token elsewhere and just want to decode the payload, pass `withoutValidation`:
+If you have already validated the token elsewhere and just want to decode the payload, pass `verify: false`:
 
 ```ts
 const user = await oauth.getUserProfileFromIdToken(idToken, {
-  withoutValidation: true,
+  verify: false,
+});
+```
+
+You can also override individual verify options (e.g. accept multiple audiences):
+
+```ts
+const user = await oauth.getUserProfileFromIdToken(idToken, {
+  verify: { audience: ["client_id_a", "client_id_b"] },
 });
 ```
 

@@ -303,7 +303,49 @@ describe("OAuth20", () => {
     }
   });
 
-  it("getUserProfileFromIdToken withoutValidation success", async () => {
+  it("getUserProfileFromIdToken with constructor audience success", async () => {
+    const time = new FakeTime(1_700_000_000_000);
+    const verifyStub = stub(jwtVerifier, "verify", () => {
+      return Promise.resolve({
+        sub: "12345",
+        something: "something",
+      });
+    });
+    const oauthWithAudience = new CustomOAuth20({
+      httpClient,
+      jwtVerifier,
+      clientId: "CLIENT_ID",
+      clientSecret: "CLIENT_SECRET",
+      audience: ["CLIENT_ID", "NATIVE_CLIENT_ID"],
+      redirectUri: "REDIRECT_URI",
+    });
+
+    try {
+      const userProfile = await oauthWithAudience.getUserProfileFromIdToken("ID_TOKEN");
+      assertEquals(userProfile, {
+        id: "12345",
+        raw: {
+          sub: "12345",
+          something: "something",
+        },
+      });
+      assertSpyCalls(verifyStub, 1);
+      assertSpyCall(verifyStub, 0, {
+        args: ["ID_TOKEN", {
+          jwksUri: "https://openauth.denostack.com/.well-known/jwks.json",
+          audience: ["CLIENT_ID", "NATIVE_CLIENT_ID"],
+          now: new Date(1_700_000_000_000),
+          issuer: "https://openauth.denostack.com",
+          secret: "CLIENT_SECRET",
+        }],
+      });
+    } finally {
+      verifyStub.restore();
+      time.restore();
+    }
+  });
+
+  it("getUserProfileFromIdToken with verify false success", async () => {
     const verifyStub = stub(jwtVerifier, "verify", () => {
       return Promise.resolve({
         sub: "12345",
@@ -312,7 +354,7 @@ describe("OAuth20", () => {
     });
 
     try {
-      const userProfile = await oauth.getUserProfileFromIdToken("ID_TOKEN", { withoutValidation: true });
+      const userProfile = await oauth.getUserProfileFromIdToken("ID_TOKEN", { verify: false });
       assertEquals(userProfile, {
         id: "12345",
         raw: {
@@ -326,6 +368,42 @@ describe("OAuth20", () => {
       });
     } finally {
       verifyStub.restore();
+    }
+  });
+
+  it("getUserProfileFromIdToken with verify options success", async () => {
+    const time = new FakeTime(1_700_000_000_000);
+    const verifyStub = stub(jwtVerifier, "verify", () => {
+      return Promise.resolve({
+        sub: "12345",
+        something: "something",
+      });
+    });
+
+    try {
+      const userProfile = await oauth.getUserProfileFromIdToken("ID_TOKEN", {
+        verify: { audience: ["CLIENT_ID", "OTHER_CLIENT_ID"] },
+      });
+      assertEquals(userProfile, {
+        id: "12345",
+        raw: {
+          sub: "12345",
+          something: "something",
+        },
+      });
+      assertSpyCalls(verifyStub, 1);
+      assertSpyCall(verifyStub, 0, {
+        args: ["ID_TOKEN", {
+          jwksUri: "https://openauth.denostack.com/.well-known/jwks.json",
+          audience: ["CLIENT_ID", "OTHER_CLIENT_ID"],
+          now: new Date(1_700_000_000_000),
+          issuer: "https://openauth.denostack.com",
+          secret: "CLIENT_SECRET",
+        }],
+      });
+    } finally {
+      verifyStub.restore();
+      time.restore();
     }
   });
 });

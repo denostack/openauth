@@ -16,6 +16,11 @@ import { WebCryptoJwtVerifier } from "./web_crypto_jwt_verifier.ts";
 export interface OAuth2Options {
   clientId: string;
   clientSecret?: string | (() => Promise<string>);
+  /**
+   * Expected `aud` value(s) when verifying an id_token.
+   * @defaultValue `clientId`
+   */
+  audience?: string | string[];
   redirectUri: string;
   scope?: string[] | string;
   httpClient?: HttpClient;
@@ -199,7 +204,7 @@ export abstract class OAuth20 implements OAuth {
     options: GetUserProfileFromIdTokenOptions = {},
   ): Promise<UserProfile> {
     let verifyOptions: JwtVerifyOptions = {};
-    if (!options.withoutValidation) {
+    if (options.verify !== false) {
       const clientSecret = typeof this.options.clientSecret === "function"
         ? await this.options.clientSecret()
         : this.options.clientSecret;
@@ -207,8 +212,9 @@ export abstract class OAuth20 implements OAuth {
         ...(clientSecret && { secret: clientSecret }),
         ...(this.jwksUri && { jwksUri: this.jwksUri }),
         ...(this.jwtIssuer && { issuer: this.jwtIssuer }),
-        audience: this.options.clientId,
+        audience: this.options.audience ?? this.options.clientId,
         now: new Date(),
+        ...(typeof options.verify === "object" ? options.verify : {}),
       };
     }
     return this.mapOidcIdTokenClaimsToUserProfile(await this.jwtVerifier.verify(idToken, verifyOptions));

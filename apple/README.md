@@ -67,6 +67,35 @@ This verifies:
 
 If any check fails, a `JwtVerifierError` is thrown.
 
+Apple sets the id_token `aud` to whichever client_id initiated the flow: the app's **bundle ID** for native (iOS/macOS)
+sign-in and the **Services ID** for the web flow. If your server accepts tokens from both, list every allowed value in
+the `audience` option (`clientId` is still used for the authorization flow):
+
+```ts
+const oauth = new AppleOAuth({
+  clientId: "com.example.app.sid", // Services ID
+  audience: ["com.example.app", "com.example.app.sid"], // bundle ID + Services ID
+  teamId: "your_team_id",
+  keyId: "your_key_id",
+  privateKey: Deno.readTextFileSync("AuthKey_XXXXXXXXXX.p8"),
+  redirectUri: "https://example.com/callback/apple",
+});
+```
+
+You can also override it per call via `verify.audience`:
+
+```ts
+const user = await oauth.getUserProfileFromIdToken(idToken, {
+  verify: { audience: ["com.example.app", "com.example.app.sid"] },
+});
+```
+
+If you have already validated the token elsewhere and just want to decode the payload, pass `verify: false`:
+
+```ts
+const user = await oauth.getUserProfileFromIdToken(idToken, { verify: false });
+```
+
 > [!NOTE]
 > The user's name is only included in the `user` form post parameter on the **first** authorization, not in the
 > id_token. Persist it at that point if you need it.

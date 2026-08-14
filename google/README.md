@@ -62,11 +62,19 @@ This verifies:
 
 If any check fails, a `JwtVerifierError` is thrown.
 
-If you have already validated the token elsewhere and just want to decode the payload, pass `withoutValidation`:
+If you have already validated the token elsewhere and just want to decode the payload, pass `verify: false`:
 
 ```ts
 const user = await oauth.getUserProfileFromIdToken(token.idToken!, {
-  withoutValidation: true,
+  verify: false,
+});
+```
+
+You can also override individual verify options (e.g. accept multiple audiences):
+
+```ts
+const user = await oauth.getUserProfileFromIdToken(token.idToken!, {
+  verify: { audience: ["client_id_a", "client_id_b"] },
 });
 ```
 
