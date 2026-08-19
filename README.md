@@ -11,15 +11,48 @@
   <a href="https://npmcharts.com/compare/@openauth/core?minimal=true"><img alt="Downloads" src="https://img.shields.io/npm/dt/@openauth/core.svg?style=flat-square" /></a>
 </p>
 
-Pure OAuth 2.0 for any JavaScript runtime.
+**OAuth without the framework.**
 
-No framework lock-in. No middleware. Just a clean 3-step OAuth flow that works on Deno, Node.js, and Bun.
+Minimal, typed OAuth 2.0 clients: authorization URL, code exchange, verified user profile - three calls, nothing more.
+Sessions, storage, and UI stay yours.
+
+- **Zero dependencies** - [Web Crypto API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Crypto_API) and `fetch`
+  only. Runs on Deno, Node.js, and Bun.
+- **Per-provider packages** - install `@openauth/google`, get Google. Nothing else.
+- **OIDC done right** - `id_token` signature (JWKS), issuer, audience, and expiration verified out of the box.
+
+## Not another auth framework
+
+| If you want...                                     | Use               |
+| -------------------------------------------------- | ----------------- |
+| A hosted identity service                          | Auth0, Clerk      |
+| A self-hosted auth server                          | OpenAuth (SST)    |
+| Framework middleware with sessions                 | Auth.js, Passport |
+| **Just the OAuth flow, verified profile included** | **openauth**      |
+
+## Install
+
+```bash
+# Deno
+deno add jsr:@denostack/openauth
+
+# Node.js / Bun - one package per provider
+npm install @openauth/google
+```
 
 ## Usage
 
 Every provider follows the same 3-step flow:
 
 ```ts
+import { GoogleOAuth } from "@denostack/openauth/google"; // npm: @openauth/google
+
+const oauth = new GoogleOAuth({
+  clientId: "your_client_id",
+  clientSecret: "your_client_secret",
+  redirectUri: "https://example.com/callback/google",
+});
+
 // 1. Generate the authorization URL and redirect the user
 const url = await oauth.getAuthRequestUri({ state: "random_state" });
 
@@ -28,6 +61,7 @@ const token = await oauth.getAccessTokenResponse(code);
 
 // 3. Fetch the user profile
 const user = await oauth.getUserProfile(token.accessToken);
+// => { id, name, email, emailVerified, picture, ... , raw }
 ```
 
 For OIDC providers (e.g. Google), you can skip the extra HTTP request and extract the profile directly from the
@@ -58,4 +92,6 @@ The token's signature (via JWKS), issuer, audience, and expiration are all verif
 | [Slack](./slack)         |       ✓       | <a href="https://npmcharts.com/compare/@openauth/slack?minimal=true"><img alt="Downloads" src="https://img.shields.io/npm/dt/@openauth/slack.svg?style=flat-square" /></a>         |
 
 Click a provider to see its detailed usage guide. The **OIDC** column marks providers that support
-[`getUserProfileFromIdToken`](#usage) — verifying a signed `id_token` instead of calling the userinfo endpoint.
+[`getUserProfileFromIdToken`](#usage) - verifying a signed `id_token` instead of calling the userinfo endpoint.
+
+More providers are on the way - each one is verified against the real service before release.

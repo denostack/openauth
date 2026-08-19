@@ -7,22 +7,83 @@ console.log(bgGreen(`version: ${version}`));
 
 await emptyDir("./.npm");
 
-const commonKeywords = ["openauth", "oauth", "socialite", "passport", "typescript"];
+const baseKeywords = [
+  "openauth",
+  "oauth",
+  "oauth2",
+  "social-login",
+  "socialite",
+  "passport",
+  "arctic",
+  "typescript",
+];
 
 const services = [
-  { name: "apple", description: "Apple Sign In OAuth library" },
-  { name: "atlassian", description: "Atlassian OAuth library" },
-  { name: "discord", description: "Discord OAuth library" },
-  { name: "facebook", description: "Facebook OAuth library" },
-  { name: "figma", description: "Figma OAuth library" },
-  { name: "github", description: "GitHub OAuth library" },
-  { name: "gitlab", description: "GitLab OAuth library" },
-  { name: "google", description: "Google OAuth library" },
-  { name: "kakao", description: "Kakao OAuth library" },
-  { name: "line", description: "LINE OAuth library" },
-  { name: "linkedin", description: "LinkedIn OAuth library" },
-  { name: "naver", description: "Naver OAuth library" },
-  { name: "slack", description: "Slack OAuth library" },
+  {
+    name: "apple",
+    description: "Sign in with Apple OAuth 2.0 client - login flow and OIDC-verified user profile",
+    keywords: ["oidc"],
+  },
+  {
+    name: "atlassian",
+    description: "Atlassian OAuth 2.0 client - login flow and user profile",
+    keywords: [],
+  },
+  {
+    name: "discord",
+    description: "Discord OAuth 2.0 client - login flow and user profile",
+    keywords: [],
+  },
+  {
+    name: "facebook",
+    description: "Facebook OAuth 2.0 client - login flow and OIDC-verified user profile",
+    keywords: ["oidc"],
+  },
+  {
+    name: "figma",
+    description: "Figma OAuth 2.0 client - login flow and user profile",
+    keywords: [],
+  },
+  {
+    name: "github",
+    description: "GitHub OAuth 2.0 client - login flow and user profile",
+    keywords: [],
+  },
+  {
+    name: "gitlab",
+    description: "GitLab OAuth 2.0 client - login flow and OIDC-verified user profile",
+    keywords: ["oidc"],
+  },
+  {
+    name: "google",
+    description: "Google OAuth 2.0 client - login flow and OIDC-verified user profile",
+    keywords: ["oidc"],
+  },
+  {
+    name: "kakao",
+    description: "Kakao OAuth 2.0 client - login flow and OIDC-verified user profile",
+    keywords: ["oidc"],
+  },
+  {
+    name: "line",
+    description: "LINE OAuth 2.0 client - login flow and OIDC-verified user profile",
+    keywords: ["oidc"],
+  },
+  {
+    name: "linkedin",
+    description: "LinkedIn OAuth 2.0 client - login flow and OIDC-verified user profile",
+    keywords: ["oidc"],
+  },
+  {
+    name: "naver",
+    description: "Naver OAuth 2.0 client - login flow and user profile",
+    keywords: [],
+  },
+  {
+    name: "slack",
+    description: "Sign in with Slack OAuth 2.0 client - login flow and OIDC-verified user profile",
+    keywords: ["oidc"],
+  },
 ];
 
 // Build core first
@@ -39,8 +100,8 @@ await build({
   package: {
     name: "@openauth/core",
     version,
-    description: "Core OAuth 2.0 library",
-    keywords: ["core", ...commonKeywords],
+    description: "Minimal, typed OAuth 2.0 clients with verified OIDC id_tokens",
+    keywords: ["core", "oidc", ...baseKeywords],
     license: "MIT",
     repository: {
       type: "git",
@@ -58,7 +119,11 @@ await build({
 
 // Build services (skip npm install since @openauth/core is not yet published)
 await Promise.all(
-  services.map(({ name, description }) =>
+  services.map(({
+    name,
+    description,
+    keywords,
+  }) =>
     build({
       entryPoints: [`./${name}/mod.ts`],
       outDir: `./.npm/${name}`,
@@ -81,7 +146,7 @@ await Promise.all(
         name: `@openauth/${name}`,
         version,
         description,
-        keywords: [name, ...commonKeywords],
+        keywords: [name, ...baseKeywords, ...keywords],
         license: "MIT",
         repository: {
           type: "git",
