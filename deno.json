@@ -1,6 +1,6 @@
 {
   "name": "@denostack/openauth",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "exports": {
     ".": "./core/mod.ts",
     "./apple": "./apple/mod.ts",
