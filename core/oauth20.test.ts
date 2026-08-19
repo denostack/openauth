@@ -184,8 +184,8 @@ describe("OAuth20", () => {
     }
   });
 
-  it("getAccessTokenResponse with get method", async () => {
-    (oauth as CustomOAuth20).requestAccessTokenMethod = "get";
+  it("getAccessTokenResponse with query method", async () => {
+    (oauth as CustomOAuth20).requestAccessTokenMethod = "query";
     const requestStub = stub(httpClient, "request", () => {
       return Promise.resolve({
         status: 200,
@@ -230,7 +230,45 @@ describe("OAuth20", () => {
             grant_type: "authorization_code",
             state: "STATE",
           },
+          {},
         ],
+      });
+    } finally {
+      requestStub.restore();
+    }
+  });
+
+  it("getAccessTokenResponse with form_basic method", async () => {
+    class BasicAuthOAuth20 extends CustomOAuth20 {
+      override requestAccessTokenMethod = "form_basic" as const;
+    }
+    const basicOAuth = new BasicAuthOAuth20({
+      httpClient,
+      jwtVerifier,
+      clientId: "CLIENT_ID",
+      clientSecret: "CLIENT_SECRET",
+      redirectUri: "REDIRECT_URI",
+    });
+    const requestStub = stub(httpClient, "request", () => {
+      return Promise.resolve({
+        status: 200,
+        headers: {},
+        data: { access_token: "ACCESS_TOKEN" },
+      });
+    });
+
+    try {
+      await basicOAuth.getAccessTokenResponse("CODE");
+      assertSpyCall(requestStub, 0, {
+        args: ["POST", "https://openauth.denostack.com/oauth2/token", {
+          client_id: "CLIENT_ID",
+          redirect_uri: "REDIRECT_URI",
+          code: "CODE",
+          grant_type: "authorization_code",
+        }, {
+          "content-type": "application/x-www-form-urlencoded",
+          authorization: `Basic ${btoa("CLIENT_ID:CLIENT_SECRET")}`,
+        }],
       });
     } finally {
       requestStub.restore();

@@ -29,7 +29,7 @@ export class NaverOAuth extends OAuth20 {
   override scopes = [];
   override scopeSeparator = ",";
 
-  override requestAccessTokenMethod = "get" as const;
+  override requestAccessTokenMethod = "query" as const;
 
   override mapDataToUserProfile(data: UserRawData): UserProfile {
     return {

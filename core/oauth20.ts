@@ -38,7 +38,12 @@ export abstract class OAuth20 implements OAuth {
   jwksUri: string | null = null;
   jwtIssuer: string | null = null;
 
-  requestAccessTokenMethod: "get" | "x-www-form-urlencoded" = "x-www-form-urlencoded";
+  /**
+   * `form_body`: POST x-www-form-urlencoded, `client_secret` in the body (OIDC `client_secret_post`) (default)
+   * `form_basic`: POST x-www-form-urlencoded, credentials via HTTP Basic auth (OIDC `client_secret_basic`)
+   * `query`: GET, all fields (including `client_secret`) in the query string
+   */
+  requestAccessTokenMethod: "form_body" | "form_basic" | "query" = "form_body";
 
   scopes: string[] = [];
   scopeSeparator: string = ",";
@@ -79,7 +84,9 @@ export abstract class OAuth20 implements OAuth {
       (typeof this.options.clientSecret === "function" ? await this.options.clientSecret() : this.options.clientSecret);
     return {
       client_id: options.clientId ?? this.options.clientId,
-      ...clientSecret ? { client_secret: clientSecret } : {},
+      ...(this.requestAccessTokenMethod === "query" || this.requestAccessTokenMethod === "form_body") && clientSecret
+        ? { client_secret: clientSecret }
+        : {},
       redirect_uri: options.redirectUri ?? this.options.redirectUri,
       code,
       grant_type: "authorization_code",
@@ -89,16 +96,16 @@ export abstract class OAuth20 implements OAuth {
 
   createErrorFromHttpClientError(e: HttpClientError): OAuthError {
     const data: Record<string, unknown> = e.data !== null && typeof e.data === "object" ? e.data : {};
-    if ("error_description" in data) {
+    if (typeof data.error_description === "string") {
       const { error_description: message, error: type, ...extra } = data as {
         error: string;
         error_description: string;
       };
       return new OAuthError(message || "Error occurred", type, extra);
     }
-    if ("error" in data) {
-      const { error: type, ...extra } = data as { error: string };
-      return new OAuthError("Error occurred", type, extra);
+    if (typeof data.error === "string") {
+      const { error: type, message, ...extra } = data as { error: string; message?: string };
+      return new OAuthError(typeof message === "string" && message ? message : "Error occurred", type, extra);
     }
     const { message, ...extra } = data as { message?: string };
     return new OAuthError(message || "Error occurred", e.message, extra);
@@ -111,22 +118,32 @@ export abstract class OAuth20 implements OAuth {
   async requestAccessToken(code: string, options: AccessTokenResponseOptions = {}): Promise<Record<string, unknown>> {
     let responsePromise: Promise<HttpClientResponse<Record<string, unknown>>>;
     const fields = await this.getAccessTokenFields(code, options);
+    const headers: Record<string, string> = {};
+    if (this.requestAccessTokenMethod === "form_basic") {
+      const clientSecret = options.clientSecret ??
+        (typeof this.options.clientSecret === "function"
+          ? await this.options.clientSecret()
+          : this.options.clientSecret);
+      headers.authorization = `Basic ${btoa(`${options.clientId ?? this.options.clientId}:${clientSecret ?? ""}`)}`;
+    }
     switch (this.requestAccessTokenMethod) {
-      case "get": {
+      case "query": {
         responsePromise = this.httpClient.request<Record<string, unknown>>(
           "GET",
           this.accessTokenRequestUri,
           fields,
+          headers,
         );
         break;
       }
-      case "x-www-form-urlencoded":
+      case "form_body":
+      case "form_basic":
       default: {
         responsePromise = this.httpClient.request<Record<string, unknown>>(
           "POST",
           this.accessTokenRequestUri,
           fields,
-          { "content-type": "application/x-www-form-urlencoded" },
+          { "content-type": "application/x-www-form-urlencoded", ...headers },
         );
       }
     }

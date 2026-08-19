@@ -28,7 +28,7 @@ export class KakaoOAuth extends OAuth20 {
   override scopes = [];
   override scopeSeparator = ",";
 
-  override requestAccessTokenMethod = "get" as const;
+  override requestAccessTokenMethod = "query" as const;
 
   override createErrorFromHttpClientError(e: HttpClientError): OAuthError {
     if (e.data !== null && typeof e.data === "object" && "msg" in e.data) {
