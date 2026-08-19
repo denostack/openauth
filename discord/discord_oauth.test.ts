@@ -1,6 +1,6 @@
 import { assertEquals, assertInstanceOf, fail } from "@std/assert";
 import { beforeEach, describe, it } from "@std/testing/bdd";
-import { stub } from "@std/testing/mock";
+import { assertSpyCall, stub } from "@std/testing/mock";
 import { FetchHttpClient, type HttpClient, HttpClientError, type OAuth, OAuthError } from "../core/mod.ts";
 import { DiscordOAuth } from "./discord_oauth.ts";
 
@@ -37,7 +37,7 @@ describe("DiscordOAuth", () => {
   });
 
   it("getAccessTokenResponse success", async () => {
-    stub(httpClient, "request", () => {
+    const requestStub = stub(httpClient, "request", () => {
       return Promise.resolve({
         status: 200,
         headers: {},
@@ -59,6 +59,16 @@ describe("DiscordOAuth", () => {
       expiresIn: 604800,
       refreshToken: REFRESH_TOKEN,
       scope: "identify",
+    });
+
+    assertSpyCall(requestStub, 0, {
+      args: ["POST", "https://discord.com/api/v10/oauth2/token", {
+        client_id: CLIENT_ID,
+        client_secret: CLIENT_SECRET,
+        redirect_uri: REDIRECT_URI,
+        code,
+        grant_type: "authorization_code",
+      }, { "content-type": "application/x-www-form-urlencoded" }],
     });
   });
 

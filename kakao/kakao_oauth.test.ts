@@ -1,6 +1,6 @@
 import { assertEquals, assertInstanceOf, fail } from "@std/assert";
 import { beforeEach, describe, it } from "@std/testing/bdd";
-import { stub } from "@std/testing/mock";
+import { assertSpyCall, stub } from "@std/testing/mock";
 import {
   FetchHttpClient,
   type HttpClient,
@@ -48,7 +48,7 @@ describe("KakaoOAuth", () => {
   });
 
   it("getAccessTokenResponse success", async () => {
-    stub(httpClient, "request", () => {
+    const requestStub = stub(httpClient, "request", () => {
       return Promise.resolve({
         status: 200,
         headers: {},
@@ -72,6 +72,16 @@ describe("KakaoOAuth", () => {
       expiresIn: 21599,
       scope: "profile_nickname profile_image",
       refreshTokenExpiresIn: 5183999,
+    });
+
+    assertSpyCall(requestStub, 0, {
+      args: ["GET", "https://kauth.kakao.com/oauth/token", {
+        client_id: CLIENT_ID,
+        client_secret: CLIENT_SECRET,
+        redirect_uri: REDIRECT_URI,
+        code,
+        grant_type: "authorization_code",
+      }, {}],
     });
   });
 

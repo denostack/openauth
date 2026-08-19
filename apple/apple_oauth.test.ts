@@ -1,4 +1,4 @@
-import { assertEquals, assertInstanceOf, assertRejects, fail } from "@std/assert";
+import { assertEquals, assertInstanceOf, assertMatch, assertRejects, fail } from "@std/assert";
 import { beforeEach, describe, it } from "@std/testing/bdd";
 import { stub } from "@std/testing/mock";
 import {
@@ -74,7 +74,7 @@ describe("AppleOAuth", () => {
   });
 
   it("getAccessTokenResponse success", async () => {
-    stub(httpClient, "request", () => {
+    const requestStub = stub(httpClient, "request", () => {
       return Promise.resolve({
         status: 200,
         headers: {},
@@ -97,6 +97,19 @@ describe("AppleOAuth", () => {
       refreshToken: REFRESH_TOKEN,
       idToken: ID_TOKEN,
     });
+
+    const [method, uri, params, headers] = requestStub.calls[0].args;
+    assertEquals(method, "POST");
+    assertEquals(uri, "https://appleid.apple.com/auth/token");
+    const { client_secret: clientSecret, ...fields } = params as Record<string, string>;
+    assertEquals(fields, {
+      client_id: CLIENT_ID,
+      redirect_uri: REDIRECT_URI,
+      code,
+      grant_type: "authorization_code",
+    });
+    assertMatch(clientSecret, /^[\w-]+\.[\w-]+\.[\w-]+$/);
+    assertEquals(headers, { "content-type": "application/x-www-form-urlencoded" });
   });
 
   it("getAccessTokenResponse fail", async () => {

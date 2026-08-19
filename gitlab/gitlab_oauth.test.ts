@@ -1,6 +1,6 @@
 import { assertEquals, assertInstanceOf, fail } from "@std/assert";
 import { beforeEach, describe, it } from "@std/testing/bdd";
-import { stub } from "@std/testing/mock";
+import { assertSpyCall, stub } from "@std/testing/mock";
 import {
   FetchHttpClient,
   type HttpClient,
@@ -69,7 +69,7 @@ describe("GitlabOAuth", () => {
   });
 
   it("getAccessTokenResponse success", async () => {
-    stub(httpClient, "request", () => {
+    const requestStub = stub(httpClient, "request", () => {
       return Promise.resolve({
         status: 200,
         headers: {},
@@ -92,6 +92,16 @@ describe("GitlabOAuth", () => {
       expiresIn: 7200,
       refreshToken: REFRESH_TOKEN,
       scope: "read_user",
+    });
+
+    assertSpyCall(requestStub, 0, {
+      args: ["POST", "https://gitlab.com/oauth/token", {
+        client_id: CLIENT_ID,
+        client_secret: CLIENT_SECRET,
+        redirect_uri: REDIRECT_URI,
+        code,
+        grant_type: "authorization_code",
+      }, { "content-type": "application/x-www-form-urlencoded" }],
     });
   });
 

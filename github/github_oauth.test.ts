@@ -1,6 +1,6 @@
 import { assertEquals, assertInstanceOf, fail } from "@std/assert";
 import { beforeEach, describe, it } from "@std/testing/bdd";
-import { stub } from "@std/testing/mock";
+import { assertSpyCall, stub } from "@std/testing/mock";
 import { FetchHttpClient, type HttpClient, HttpClientError, type OAuth, OAuthError } from "../core/mod.ts";
 import { GithubOAuth } from "./github_oauth.ts";
 
@@ -36,7 +36,7 @@ describe("GithubOAuth", () => {
   });
 
   it("getAccessTokenResponse success", async () => {
-    stub(httpClient, "request", () => {
+    const requestStub = stub(httpClient, "request", () => {
       return Promise.resolve({
         status: 200,
         headers: {},
@@ -54,6 +54,16 @@ describe("GithubOAuth", () => {
       accessToken: ACCESS_TOKEN,
       tokenType: "bearer",
       scope: "read:user,user:email,user:follow",
+    });
+
+    assertSpyCall(requestStub, 0, {
+      args: ["POST", "https://github.com/login/oauth/access_token", {
+        client_id: CLIENT_ID,
+        client_secret: CLIENT_SECRET,
+        redirect_uri: REDIRECT_URI,
+        code,
+        grant_type: "authorization_code",
+      }, { "content-type": "application/x-www-form-urlencoded" }],
     });
   });
 

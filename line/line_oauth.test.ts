@@ -1,6 +1,6 @@
 import { assertEquals, assertInstanceOf, fail } from "@std/assert";
 import { beforeEach, describe, it } from "@std/testing/bdd";
-import { stub } from "@std/testing/mock";
+import { assertSpyCall, stub } from "@std/testing/mock";
 import {
   FetchHttpClient,
   type HttpClient,
@@ -50,7 +50,7 @@ describe("LineOAuth", () => {
   });
 
   it("getAccessTokenResponse success", async () => {
-    stub(httpClient, "request", () => {
+    const requestStub = stub(httpClient, "request", () => {
       return Promise.resolve({
         status: 200,
         headers: {},
@@ -74,6 +74,16 @@ describe("LineOAuth", () => {
       expiresIn: 2592000,
       refreshToken: REFRESH_TOKEN,
       idToken: ID_TOKEN,
+    });
+
+    assertSpyCall(requestStub, 0, {
+      args: ["POST", "https://api.line.me/oauth2/v2.1/token", {
+        client_id: CLIENT_ID,
+        client_secret: CLIENT_SECRET,
+        redirect_uri: REDIRECT_URI,
+        code,
+        grant_type: "authorization_code",
+      }, { "content-type": "application/x-www-form-urlencoded" }],
     });
   });
 

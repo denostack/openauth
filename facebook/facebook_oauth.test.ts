@@ -1,6 +1,6 @@
 import { assertEquals, assertInstanceOf, fail } from "@std/assert";
 import { beforeEach, describe, it } from "@std/testing/bdd";
-import { stub } from "@std/testing/mock";
+import { assertSpyCall, stub } from "@std/testing/mock";
 import {
   FetchHttpClient,
   type HttpClient,
@@ -48,7 +48,7 @@ describe("FacebookOAuth", () => {
   });
 
   it("getAccessTokenResponse success", async () => {
-    stub(httpClient, "request", () => {
+    const requestStub = stub(httpClient, "request", () => {
       return Promise.resolve({
         status: 200,
         headers: {},
@@ -67,6 +67,16 @@ describe("FacebookOAuth", () => {
       accessToken: ACCESS_TOKEN,
       tokenType: "bearer",
       expiresIn: 5183941,
+    });
+
+    assertSpyCall(requestStub, 0, {
+      args: ["POST", `https://graph.facebook.com/${(oauth as FacebookOAuth).version}/oauth/access_token`, {
+        client_id: CLIENT_ID,
+        client_secret: CLIENT_SECRET,
+        redirect_uri: REDIRECT_URI,
+        code,
+        grant_type: "authorization_code",
+      }, { "content-type": "application/x-www-form-urlencoded" }],
     });
   });
 
