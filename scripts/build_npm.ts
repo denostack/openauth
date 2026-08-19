@@ -11,6 +11,7 @@ const commonKeywords = ["openauth", "oauth", "socialite", "passport", "typescrip
 
 const services = [
   { name: "apple", description: "Apple Sign In OAuth library" },
+  { name: "atlassian", description: "Atlassian OAuth library" },
   { name: "discord", description: "Discord OAuth library" },
   { name: "facebook", description: "Facebook OAuth library" },
   { name: "github", description: "GitHub OAuth library" },

@@ -41,19 +41,20 @@ The token's signature (via JWKS), issuer, audience, and expiration are all verif
 
 ## Providers
 
-| Provider               |     OIDC      | Download                                                                                                                                                                         |
-| ---------------------- | :-----------: | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [Apple](./apple)       |       ✓       | <a href="https://npmcharts.com/compare/@openauth/apple?minimal=true"><img alt="Downloads" src="https://img.shields.io/npm/dt/@openauth/apple.svg?style=flat-square" /></a>       |
-| [Discord](./discord)   | not supported | <a href="https://npmcharts.com/compare/@openauth/discord?minimal=true"><img alt="Downloads" src="https://img.shields.io/npm/dt/@openauth/discord.svg?style=flat-square" /></a>   |
-| [Facebook](./facebook) |       ✓       | <a href="https://npmcharts.com/compare/@openauth/facebook?minimal=true"><img alt="Downloads" src="https://img.shields.io/npm/dt/@openauth/facebook.svg?style=flat-square" /></a> |
-| [GitHub](./github)     | not supported | <a href="https://npmcharts.com/compare/@openauth/github?minimal=true"><img alt="Downloads" src="https://img.shields.io/npm/dt/@openauth/github.svg?style=flat-square" /></a>     |
-| [GitLab](./gitlab)     |       ✓       | <a href="https://npmcharts.com/compare/@openauth/gitlab?minimal=true"><img alt="Downloads" src="https://img.shields.io/npm/dt/@openauth/gitlab.svg?style=flat-square" /></a>     |
-| [Google](./google)     |       ✓       | <a href="https://npmcharts.com/compare/@openauth/google?minimal=true"><img alt="Downloads" src="https://img.shields.io/npm/dt/@openauth/google.svg?style=flat-square" /></a>     |
-| [Kakao](./kakao)       |       ✓       | <a href="https://npmcharts.com/compare/@openauth/kakao?minimal=true"><img alt="Downloads" src="https://img.shields.io/npm/dt/@openauth/kakao.svg?style=flat-square" /></a>       |
-| [LINE](./line)         |       ✓       | <a href="https://npmcharts.com/compare/@openauth/line?minimal=true"><img alt="Downloads" src="https://img.shields.io/npm/dt/@openauth/line.svg?style=flat-square" /></a>         |
-| [LinkedIn](./linkedin) |       ✓       | <a href="https://npmcharts.com/compare/@openauth/linkedin?minimal=true"><img alt="Downloads" src="https://img.shields.io/npm/dt/@openauth/linkedin.svg?style=flat-square" /></a> |
-| [Naver](./naver)       | not supported | <a href="https://npmcharts.com/compare/@openauth/naver?minimal=true"><img alt="Downloads" src="https://img.shields.io/npm/dt/@openauth/naver.svg?style=flat-square" /></a>       |
-| [Slack](./slack)       |       ✓       | <a href="https://npmcharts.com/compare/@openauth/slack?minimal=true"><img alt="Downloads" src="https://img.shields.io/npm/dt/@openauth/slack.svg?style=flat-square" /></a>       |
+| Provider                 |     OIDC      | Download                                                                                                                                                                           |
+| ------------------------ | :-----------: | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [Apple](./apple)         |       ✓       | <a href="https://npmcharts.com/compare/@openauth/apple?minimal=true"><img alt="Downloads" src="https://img.shields.io/npm/dt/@openauth/apple.svg?style=flat-square" /></a>         |
+| [Atlassian](./atlassian) | not supported | <a href="https://npmcharts.com/compare/@openauth/atlassian?minimal=true"><img alt="Downloads" src="https://img.shields.io/npm/dt/@openauth/atlassian.svg?style=flat-square" /></a> |
+| [Discord](./discord)     | not supported | <a href="https://npmcharts.com/compare/@openauth/discord?minimal=true"><img alt="Downloads" src="https://img.shields.io/npm/dt/@openauth/discord.svg?style=flat-square" /></a>     |
+| [Facebook](./facebook)   |       ✓       | <a href="https://npmcharts.com/compare/@openauth/facebook?minimal=true"><img alt="Downloads" src="https://img.shields.io/npm/dt/@openauth/facebook.svg?style=flat-square" /></a>   |
+| [GitHub](./github)       | not supported | <a href="https://npmcharts.com/compare/@openauth/github?minimal=true"><img alt="Downloads" src="https://img.shields.io/npm/dt/@openauth/github.svg?style=flat-square" /></a>       |
+| [GitLab](./gitlab)       |       ✓       | <a href="https://npmcharts.com/compare/@openauth/gitlab?minimal=true"><img alt="Downloads" src="https://img.shields.io/npm/dt/@openauth/gitlab.svg?style=flat-square" /></a>       |
+| [Google](./google)       |       ✓       | <a href="https://npmcharts.com/compare/@openauth/google?minimal=true"><img alt="Downloads" src="https://img.shields.io/npm/dt/@openauth/google.svg?style=flat-square" /></a>       |
+| [Kakao](./kakao)         |       ✓       | <a href="https://npmcharts.com/compare/@openauth/kakao?minimal=true"><img alt="Downloads" src="https://img.shields.io/npm/dt/@openauth/kakao.svg?style=flat-square" /></a>         |
+| [LINE](./line)           |       ✓       | <a href="https://npmcharts.com/compare/@openauth/line?minimal=true"><img alt="Downloads" src="https://img.shields.io/npm/dt/@openauth/line.svg?style=flat-square" /></a>           |
+| [LinkedIn](./linkedin)   |       ✓       | <a href="https://npmcharts.com/compare/@openauth/linkedin?minimal=true"><img alt="Downloads" src="https://img.shields.io/npm/dt/@openauth/linkedin.svg?style=flat-square" /></a>   |
+| [Naver](./naver)         | not supported | <a href="https://npmcharts.com/compare/@openauth/naver?minimal=true"><img alt="Downloads" src="https://img.shields.io/npm/dt/@openauth/naver.svg?style=flat-square" /></a>         |
+| [Slack](./slack)         |       ✓       | <a href="https://npmcharts.com/compare/@openauth/slack?minimal=true"><img alt="Downloads" src="https://img.shields.io/npm/dt/@openauth/slack.svg?style=flat-square" /></a>         |
 
 Click a provider to see its detailed usage guide. The **OIDC** column marks providers that support
 [`getUserProfileFromIdToken`](#usage) — verifying a signed `id_token` instead of calling the userinfo endpoint.

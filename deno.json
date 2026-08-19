@@ -4,6 +4,7 @@
   "exports": {
     ".": "./core/mod.ts",
     "./apple": "./apple/mod.ts",
+    "./atlassian": "./atlassian/mod.ts",
     "./discord": "./discord/mod.ts",
     "./facebook": "./facebook/mod.ts",
     "./github": "./github/mod.ts",
