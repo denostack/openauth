@@ -7,6 +7,7 @@
     "./atlassian": "./atlassian/mod.ts",
     "./discord": "./discord/mod.ts",
     "./facebook": "./facebook/mod.ts",
+    "./figma": "./figma/mod.ts",
     "./github": "./github/mod.ts",
     "./gitlab": "./gitlab/mod.ts",
     "./google": "./google/mod.ts",

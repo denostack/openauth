@@ -14,6 +14,7 @@ const services = [
   { name: "atlassian", description: "Atlassian OAuth library" },
   { name: "discord", description: "Discord OAuth library" },
   { name: "facebook", description: "Facebook OAuth library" },
+  { name: "figma", description: "Figma OAuth library" },
   { name: "github", description: "GitHub OAuth library" },
   { name: "gitlab", description: "GitLab OAuth library" },
   { name: "google", description: "Google OAuth library" },
