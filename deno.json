@@ -11,6 +11,7 @@
     "./google": "./google/mod.ts",
     "./kakao": "./kakao/mod.ts",
     "./line": "./line/mod.ts",
+    "./linkedin": "./linkedin/mod.ts",
     "./naver": "./naver/mod.ts"
   },
   "tasks": {
@@ -19,7 +20,7 @@
     "test:format": "deno fmt --check",
     "test:lint": "deno lint",
     "test:unit": "deno test -A",
-    "test:types": "deno check core/mod.ts apple/mod.ts github/mod.ts google/mod.ts facebook/mod.ts kakao/mod.ts naver/mod.ts line/mod.ts discord/mod.ts gitlab/mod.ts",
+    "test:types": "find . -name '*.ts' -not -path './.npm/*' | xargs deno check",
     "build:npm": "deno run --allow-env --allow-read --allow-write --allow-run scripts/build_npm.ts"
   },
   "imports": {

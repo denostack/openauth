@@ -192,7 +192,7 @@ export abstract class OAuth20 implements OAuth {
       ...(typeof data.email_verified === "boolean" && { emailVerified: data.email_verified }),
       ...(data.picture && { picture: data.picture }),
       ...(data.zoneinfo && { zoneinfo: data.zoneinfo }),
-      ...(data.locale && { locale: data.locale }),
+      ...(data.locale && { locale: data.locale.split("_").join("-") }),
       ...(data.gender && { gender: data.gender }),
       ...(data.birthdate && { birthdate: data.birthdate }),
       raw: data,

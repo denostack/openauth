@@ -51,6 +51,7 @@ The token's signature (via JWKS), issuer, audience, and expiration are all verif
 | [Google](./google)     |       ✓       | <a href="https://npmcharts.com/compare/@openauth/google?minimal=true"><img alt="Downloads" src="https://img.shields.io/npm/dt/@openauth/google.svg?style=flat-square" /></a>     |
 | [Kakao](./kakao)       |       ✓       | <a href="https://npmcharts.com/compare/@openauth/kakao?minimal=true"><img alt="Downloads" src="https://img.shields.io/npm/dt/@openauth/kakao.svg?style=flat-square" /></a>       |
 | [LINE](./line)         |       ✓       | <a href="https://npmcharts.com/compare/@openauth/line?minimal=true"><img alt="Downloads" src="https://img.shields.io/npm/dt/@openauth/line.svg?style=flat-square" /></a>         |
+| [LinkedIn](./linkedin) |       ✓       | <a href="https://npmcharts.com/compare/@openauth/linkedin?minimal=true"><img alt="Downloads" src="https://img.shields.io/npm/dt/@openauth/linkedin.svg?style=flat-square" /></a> |
 | [Naver](./naver)       | not supported | <a href="https://npmcharts.com/compare/@openauth/naver?minimal=true"><img alt="Downloads" src="https://img.shields.io/npm/dt/@openauth/naver.svg?style=flat-square" /></a>       |
 
 Click a provider to see its detailed usage guide. The **OIDC** column marks providers that support

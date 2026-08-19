@@ -10,15 +10,16 @@ await emptyDir("./.npm");
 const commonKeywords = ["openauth", "oauth", "socialite", "passport", "typescript"];
 
 const services = [
-  { name: "github", description: "GitHub OAuth library" },
-  { name: "google", description: "Google OAuth library" },
-  { name: "facebook", description: "Facebook OAuth library" },
-  { name: "kakao", description: "Kakao OAuth library" },
-  { name: "naver", description: "Naver OAuth library" },
-  { name: "line", description: "LINE OAuth library" },
-  { name: "discord", description: "Discord OAuth library" },
-  { name: "gitlab", description: "GitLab OAuth library" },
   { name: "apple", description: "Apple Sign In OAuth library" },
+  { name: "discord", description: "Discord OAuth library" },
+  { name: "facebook", description: "Facebook OAuth library" },
+  { name: "github", description: "GitHub OAuth library" },
+  { name: "gitlab", description: "GitLab OAuth library" },
+  { name: "google", description: "Google OAuth library" },
+  { name: "kakao", description: "Kakao OAuth library" },
+  { name: "line", description: "LINE OAuth library" },
+  { name: "linkedin", description: "LinkedIn OAuth library" },
+  { name: "naver", description: "Naver OAuth library" },
 ];
 
 // Build core first
