@@ -20,6 +20,7 @@ const services = [
   { name: "line", description: "LINE OAuth library" },
   { name: "linkedin", description: "LinkedIn OAuth library" },
   { name: "naver", description: "Naver OAuth library" },
+  { name: "slack", description: "Slack OAuth library" },
 ];
 
 // Build core first

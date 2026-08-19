@@ -96,6 +96,10 @@ export abstract class OAuth20 implements OAuth {
       };
       return new OAuthError(message || "Error occurred", type, extra);
     }
+    if ("error" in data) {
+      const { error: type, ...extra } = data as { error: string };
+      return new OAuthError("Error occurred", type, extra);
+    }
     const { message, ...extra } = data as { message?: string };
     return new OAuthError(message || "Error occurred", e.message, extra);
   }
@@ -169,10 +173,12 @@ export abstract class OAuth20 implements OAuth {
 
   abstract mapDataToUserProfile(data: unknown): UserProfile;
 
+  getUserProfileHeaders(accessToken: string): Record<string, string> {
+    return { authorization: `Bearer ${accessToken}` };
+  }
+
   getUserProfile(accessToken: string): Promise<UserProfile> {
-    return this.httpClient.request<unknown>("GET", this.userProfileUri, {}, {
-      authorization: `Bearer ${accessToken}`,
-    })
+    return this.httpClient.request<unknown>("GET", this.userProfileUri, {}, this.getUserProfileHeaders(accessToken))
       .then((res) => this.mapDataToUserProfile(res.data))
       .catch((e) => {
         if (e instanceof HttpClientError) {

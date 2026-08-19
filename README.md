@@ -53,6 +53,7 @@ The token's signature (via JWKS), issuer, audience, and expiration are all verif
 | [LINE](./line)         |       ✓       | <a href="https://npmcharts.com/compare/@openauth/line?minimal=true"><img alt="Downloads" src="https://img.shields.io/npm/dt/@openauth/line.svg?style=flat-square" /></a>         |
 | [LinkedIn](./linkedin) |       ✓       | <a href="https://npmcharts.com/compare/@openauth/linkedin?minimal=true"><img alt="Downloads" src="https://img.shields.io/npm/dt/@openauth/linkedin.svg?style=flat-square" /></a> |
 | [Naver](./naver)       | not supported | <a href="https://npmcharts.com/compare/@openauth/naver?minimal=true"><img alt="Downloads" src="https://img.shields.io/npm/dt/@openauth/naver.svg?style=flat-square" /></a>       |
+| [Slack](./slack)       |       ✓       | <a href="https://npmcharts.com/compare/@openauth/slack?minimal=true"><img alt="Downloads" src="https://img.shields.io/npm/dt/@openauth/slack.svg?style=flat-square" /></a>       |
 
 Click a provider to see its detailed usage guide. The **OIDC** column marks providers that support
 [`getUserProfileFromIdToken`](#usage) — verifying a signed `id_token` instead of calling the userinfo endpoint.

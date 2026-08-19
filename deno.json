@@ -12,7 +12,8 @@
     "./kakao": "./kakao/mod.ts",
     "./line": "./line/mod.ts",
     "./linkedin": "./linkedin/mod.ts",
-    "./naver": "./naver/mod.ts"
+    "./naver": "./naver/mod.ts",
+    "./slack": "./slack/mod.ts"
   },
   "tasks": {
     "bench": "deno run --allow-run=deno --allow-write=.benchmark scripts/benchmark.ts",
